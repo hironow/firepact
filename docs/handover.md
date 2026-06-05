@@ -39,6 +39,20 @@ Nothing. Awaiting requester review / publish decision.
    gate against real history.
 3. Grow `.semgrep/rules/` as patterns recur (candidates listed in its README).
 
+## Review pass (codex + 3 review agents)
+
+A full review was run after implementation. Critical findings were fixed with
+regression tests: the compat read signature is now structural (array-of-enum and
+nullable-enum retypes, numeric-enum member changes, and root-metadata changes are
+caught; union branch order is normalized so reorders are not false breaks); the
+read converter strips the doc-id on write; the Python CLI prefers the repo-local
+binary; the e2e reader reads the standard `FIRESTORE_EMULATOR_HOST`. Two design
+points are accepted-and-documented: the generated converter is **read-oriented**
+(writes use `{Name}Write` with setDoc/updateDoc directly, since
+FirestoreDataConverter has a single app type), and the global `@firestore_realtime`
+registry is correct for the fresh-process CLI but accumulates in long-lived
+processes.
+
 ## Known Risks / Blockers
 
 - Native extension staleness: `uv sync` skips rebuilding the in-tree PyO3 module
