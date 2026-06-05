@@ -56,8 +56,7 @@ pub fn emit(bundle: &Value) -> String {
 }
 
 fn is_object(node: &Value) -> bool {
-    node.get("properties").is_some()
-        || node.get("type").and_then(Value::as_str) == Some("object")
+    node.get("properties").is_some() || node.get("type").and_then(Value::as_str) == Some("object")
 }
 
 fn render_enum(name: &str, node: &Value) -> String {
@@ -91,9 +90,7 @@ impl<'a> Ctx<'a> {
             .map(|a| a.iter().filter_map(Value::as_str).collect())
             .unwrap_or_default();
 
-        let doc_id = node
-            .get("x-firestore-doc-id-field")
-            .and_then(Value::as_str);
+        let doc_id = node.get("x-firestore-doc-id-field").and_then(Value::as_str);
 
         let mut lines = String::new();
         let empty = Map::new();
@@ -132,13 +129,7 @@ impl<'a> Ctx<'a> {
     }
 
     /// Optionality (`?`) is orthogonal to value-nullability.
-    fn is_optional(
-        &self,
-        key: &str,
-        prop: &Value,
-        view: View,
-        required: &BTreeSet<&str>,
-    ) -> bool {
+    fn is_optional(&self, key: &str, prop: &Value, view: View, required: &BTreeSet<&str>) -> bool {
         match view {
             // write = "what must I provide to create a valid doc" = Pydantic required.
             View::Write => !required.contains(key),
@@ -173,8 +164,7 @@ impl<'a> Ctx<'a> {
         // 5) anyOf / oneOf -> union (null branch -> "null").
         for k in ["anyOf", "oneOf"] {
             if let Some(arr) = node.get(k).and_then(Value::as_array) {
-                let parts: Vec<String> =
-                    arr.iter().map(|b| self.render_type(b, view)).collect();
+                let parts: Vec<String> = arr.iter().map(|b| self.render_type(b, view)).collect();
                 return dedup_union(parts);
             }
         }
@@ -278,15 +268,11 @@ impl<'a> Ctx<'a> {
                 // dict[str, T] -> Record<string, T>
                 match node.get("additionalProperties") {
                     Some(Value::Object(_)) => {
-                        let inner = self.render_type(
-                            node.get("additionalProperties").unwrap(),
-                            view,
-                        );
+                        let inner =
+                            self.render_type(node.get("additionalProperties").unwrap(), view);
                         format!("Record<string, {inner}>")
                     }
-                    Some(Value::Bool(true)) | None => {
-                        "Record<string, unknown>".to_string()
-                    }
+                    Some(Value::Bool(true)) | None => "Record<string, unknown>".to_string(),
                     _ => "Record<string, never>".to_string(),
                 }
             }
