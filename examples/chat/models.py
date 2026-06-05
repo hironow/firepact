@@ -15,6 +15,7 @@ from firepact import (
     FirestoreGeoPoint,
     FirestoreRef,
     FirestoreServerTimestamp,
+    FirestoreVector,
     firestore_realtime,
 )
 from pydantic import BaseModel, ConfigDict, Field
@@ -69,6 +70,7 @@ class Message(CamelModel):
     body: Annotated[str, FirestoreBackfilled(since_version="v1")]  # -> presence-since
     created_at: Annotated[datetime, FirestoreServerTimestamp()]
     edited_at: datetime  # plain (non-server) datetime -> Timestamp / Timestamp | Date
+    embedding: Annotated[list[float], FirestoreVector()]  # -> VectorValue
     kind: MessageKind
     location: Annotated[tuple[float, float], FirestoreGeoPoint()]  # -> GeoPoint
     metadata: dict[str, str]

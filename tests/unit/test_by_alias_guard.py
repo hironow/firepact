@@ -29,6 +29,7 @@ def _sample_message() -> Message:
         body="hello",
         created_at=datetime(2020, 1, 1, tzinfo=UTC),
         edited_at=datetime(2020, 1, 2, tzinfo=UTC),
+        embedding=[0.1, 0.2, 0.3],
         kind=MessageKind.TEXT,
         location=(35.6, 139.7),
         metadata={"client": "web"},

@@ -70,8 +70,11 @@ def written_doc() -> Iterator[None]:
     from google.cloud import firestore
 
     db = firestore.Client(project=PROJECT)
+    from google.cloud.firestore_v1.vector import Vector
+
     # camelCase wire keys (trap #1); doc-id excluded; createdAt via server sentinel.
     payload: dict[str, Any] = {
+        "embedding": Vector([0.1, 0.2, 0.3]),
         "attachment": {"kind": "image", "url": "https://x/i.png", "width": 64},
         "author": db.document("profiles/p1"),
         "authorProfile": {"displayName": "Ada", "avatarUrl": None},
@@ -137,6 +140,7 @@ def test_onsnapshot_reads_written_doc(generated_ts: Path, written_doc: None) -> 
     assert payload["authorIsRef"] is True
     assert payload["editedAtIsTimestamp"] is True
     assert payload["locationIsGeoPoint"] is True
+    assert payload["embeddingIsVector"] is True
     assert payload["thumbnailIsBytes"] is True
     assert payload["attachmentKind"] == "image"
     assert payload["selection"] == [0, 10]

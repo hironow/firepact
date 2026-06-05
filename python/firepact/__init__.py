@@ -14,6 +14,7 @@ from firepact.firestore_schema import (
     FirestoreJsonSchema,
     FirestoreRef,
     FirestoreServerTimestamp,
+    FirestoreVector,
 )
 from firepact.firestore_select import (
     RealtimeSpec,
@@ -30,6 +31,7 @@ __all__ = [
     "FirestoreJsonSchema",
     "FirestoreRef",
     "FirestoreServerTimestamp",
+    "FirestoreVector",
     "RealtimeSpec",
     "__version__",
     "build_realtime_bundle",

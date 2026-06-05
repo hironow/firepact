@@ -96,6 +96,14 @@
           "type": "string",
           "x-firestore-type": "timestamp"
         },
+        "embedding": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Embedding",
+          "type": "array",
+          "x-firestore-type": "vector"
+        },
         "id": {
           "title": "Id",
           "type": "string"
@@ -176,6 +184,7 @@
         "body",
         "createdAt",
         "editedAt",
+        "embedding",
         "kind",
         "location",
         "metadata",

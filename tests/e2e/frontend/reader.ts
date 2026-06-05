@@ -12,6 +12,7 @@ import {
   getFirestore,
   onSnapshot,
   Timestamp,
+  VectorValue,
 } from "firebase/firestore";
 
 import { type Message, messageConverter } from "./generated";
@@ -60,6 +61,9 @@ const unsubscribe = onSnapshot(
     if (m.location !== undefined && !(m.location instanceof GeoPoint)) {
       violations.push("location not GeoPoint");
     }
+    if (m.embedding !== undefined && !(m.embedding instanceof VectorValue)) {
+      violations.push("embedding not VectorValue");
+    }
     if (m.thumbnail !== undefined && !(m.thumbnail instanceof Bytes)) {
       violations.push("thumbnail not Bytes");
     }
@@ -96,6 +100,7 @@ const unsubscribe = onSnapshot(
         authorIsRef: m.author instanceof DocumentReference,
         editedAtIsTimestamp: m.editedAt instanceof Timestamp,
         locationIsGeoPoint: m.location instanceof GeoPoint,
+        embeddingIsVector: m.embedding instanceof VectorValue,
         thumbnailIsBytes: m.thumbnail instanceof Bytes,
         pinnedIsBool: typeof m.pinned === "boolean",
         priorityIsNumber: typeof m.priority === "number",

@@ -58,6 +58,7 @@ fn golden_ts_exercises_every_firestore_wire_type() {
         "FieldValue",                               // server timestamp (write)
         "DocumentReference<Profile>",               // reference with target
         "GeoPoint",                                 // geopoint
+        "VectorValue",                              // vector (vector search)
         ": Bytes;",                                 // bytes (client SDK Bytes wrapper)
         "(string & {})",                            // open string enum (read)
         "Record<string, string>",                   // dict

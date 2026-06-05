@@ -15,12 +15,13 @@ export function summarize(m: Message): string {
   const reactionCount: number = m.reactions?.length ?? 0;
   const edited: Timestamp | undefined = m.editedAt; // non-server datetime -> Timestamp
   const loc: GeoPoint | undefined = m.location; // -> GeoPoint
+  const dims: number = m.embedding?.toArray().length ?? 0; // -> VectorValue
   const bytes: number = m.thumbnail?.toUint8Array().byteLength ?? 0; // -> Bytes
   const span: number = (m.selection?.[1] ?? 0) - (m.selection?.[0] ?? 0); // tuple [number, number]
   const pinned: boolean = m.pinned ?? false; // boolean
   const priority: number = m.priority ?? 0; // number
   const avatar: string | null = m.authorProfile?.avatarUrl ?? null; // nullable string
-  return `${idLen}:${body}:${String(created)}:${kind}:${tagCount}:${reactionCount}:${String(edited)}:${String(loc)}:${bytes}:${span}:${pinned}:${priority}:${String(avatar)}`;
+  return `${idLen}:${body}:${String(created)}:${kind}:${tagCount}:${reactionCount}:${String(edited)}:${String(loc)}:${bytes}:${span}:${pinned}:${priority}:${String(avatar)}:${dims}`;
 }
 
 // The converter is what makes `id: string` hold at runtime.

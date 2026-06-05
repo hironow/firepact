@@ -75,6 +75,12 @@ fn manifest() -> Vec<FsType> {
             reader_token: "instanceof GeoPoint",
         },
         FsType {
+            name: "vector",
+            field: json!({"type": "array", "items": {"type": "number"}, "x-firestore-type": "vector"}),
+            ts_token: "VectorValue",
+            reader_token: "instanceof VectorValue",
+        },
+        FsType {
             name: "bytes",
             field: json!({"type": "string", "x-firestore-type": "bytes"}),
             ts_token: "Bytes",

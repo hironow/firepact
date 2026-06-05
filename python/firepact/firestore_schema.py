@@ -55,6 +55,18 @@ class FirestoreGeoPoint:
 
 
 @dataclass(frozen=True)
+class FirestoreVector:
+    """``Annotated[list[float], FirestoreVector()]`` -> Firestore vector (``VectorValue``)."""
+
+    def __get_pydantic_json_schema__(
+        self, cs: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        js = handler(cs)
+        js["x-firestore-type"] = "vector"
+        return js
+
+
+@dataclass(frozen=True)
 class FirestoreBackfilled:
     """Presence guaranteed across all live docs -> the read view may promote to required."""
 

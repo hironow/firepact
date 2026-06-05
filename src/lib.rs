@@ -311,6 +311,11 @@ impl<'a> Ctx<'a> {
                 self.used.insert("GeoPoint");
                 "GeoPoint".to_string()
             }
+            "vector" => {
+                // Firestore vector field (vector search); client SDK `VectorValue`.
+                self.used.insert("VectorValue");
+                "VectorValue".to_string()
+            }
             "reference" => {
                 self.used.insert("DocumentReference");
                 // a reference always points to the canonical (read) stored shape.
