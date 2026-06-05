@@ -26,8 +26,11 @@ All phases (0 -> 1 -> 3 -> 2) are implemented and green.
 - Wire-type coverage: reference, server/plain timestamp, bytes, GeoPoint, enum
   (open), dict, array, tuple, nested model, discriminated union -- all in the
   example, golden, and (where runtime-relevant) the e2e.
-- Cross-cutting: ADRs 0001-0007, `.semgrep/` skeleton, publish-ready metadata,
+- Cross-cutting: ADRs 0001-0008, `.semgrep/` skeleton, publish-ready metadata,
   `private/PUBLISH_HOWTO.md` (git-ignored local runbook).
+- Runtime E2E has been run green against the live emulator; it caught a real
+  wire-type bug (`bytes` -> `Bytes`, not `Uint8Array`, for the client SDK; see
+  ADR 0008) that `tsc` could not.
 
 `just test` (rust + python) and `just lint` are green; `just test-e2e` passes
 against the running emulator. All commits are Conventional Commits with
