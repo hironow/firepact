@@ -2,8 +2,8 @@
 // as its types claim. If the projection were wrong (e.g. `id` optional, or
 // `createdAt` typed as string), `tsc --noEmit` would fail here.
 
-import type { GeoPoint, Timestamp } from "firebase/firestore";
-import type { Message } from "./generated";
+import { type GeoPoint, serverTimestamp, type Timestamp } from "firebase/firestore";
+import type { Message, MessageUpdate } from "./generated";
 import { messageConverter } from "./generated";
 
 export function summarize(m: Message): string {
@@ -21,3 +21,8 @@ export function summarize(m: Message): string {
 
 // The converter is what makes `id: string` hold at runtime.
 export const converter = messageConverter;
+
+// Update view: optional fields AND FieldValue are both accepted (UpdateData<Write>).
+export function edit(): MessageUpdate {
+  return { body: "edited", createdAt: serverTimestamp() };
+}

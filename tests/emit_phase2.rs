@@ -54,10 +54,13 @@ fn root_gets_an_update_view() {
             "required": ["id", "body"]
         }}
     }));
+    // The complete update view: each field optional + FieldValue (+ nested paths),
+    // expressed via firebase's own UpdateData<T> (DESIGN S5.4).
     assert!(
-        ts.contains("export type MessageUpdate = Partial<MessageWrite>;"),
+        ts.contains("export type MessageUpdate = UpdateData<MessageWrite>;"),
         "update view:\n{ts}"
     );
+    assert!(ts.contains("UpdateData"), "UpdateData import symbol:\n{ts}");
 }
 
 #[test]

@@ -48,8 +48,11 @@ pub fn emit(bundle: &Value) -> String {
             // Realtime roots get the update view, a converter, and a typed path
             // helper (the doc-id converter keeps `id: snapshot.id` satisfiable).
             if let Some(col) = node.get("x-firestore-collection").and_then(Value::as_str) {
+                // Complete update view: optional fields + FieldValue + nested
+                // paths, via firebase's own UpdateData<T> (DESIGN S5.4).
+                ctx.used.insert("UpdateData");
                 body.push_str(&format!(
-                    "export type {name}Update = Partial<{name}Write>;\n\n"
+                    "export type {name}Update = UpdateData<{name}Write>;\n\n"
                 ));
                 converters.push_str(&ctx.render_converter(name, node));
                 converters.push_str(&render_path_helper(col));

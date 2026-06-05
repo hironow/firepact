@@ -27,7 +27,7 @@ fn firestore_imports_are_type_only() {
     }));
 
     assert!(
-        ts.contains("import type { DocumentReference, FieldValue, FirestoreDataConverter, Timestamp } from \"firebase/firestore\";"),
+        ts.contains("import type { DocumentReference, FieldValue, FirestoreDataConverter, Timestamp, UpdateData } from \"firebase/firestore\";"),
         "expected a type-only import:\n{ts}"
     );
     // no value import of firestore symbols
