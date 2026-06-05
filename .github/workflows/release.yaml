@@ -70,7 +70,10 @@ jobs:
       matrix:
         python: ["3.11", "3.12", "3.13", "3.14"]
         platform:
-          - { os: macos-13, target: x86_64 }
+          # macОS x86_64 is cross-compiled on the arm64 runner: the Intel
+          # (macos-13) hosted runners are scarce/deprecated and leave the job
+          # queued indefinitely. maturin cross-builds x86_64 from arm64 fine.
+          - { os: macos-14, target: x86_64 }
           - { os: macos-14, target: aarch64 }
           - { os: windows-latest, target: x64 }
     steps:
