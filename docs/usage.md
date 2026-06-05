@@ -130,8 +130,10 @@ firepact-compat --history schemas --new schemas/pkg.v2.json   # pip-installed, n
 
 Both forms exist: `firepact-compat` (Python console script, ships in the wheel)
 and `firepact compat` (the Rust binary). Pairwise `<old.json> <new.json>` also
-works. Exit code is non-zero on any breaking change. See
-[compatibility.md](compatibility.md).
+works. Exit code is non-zero on any breaking change. `firepact compat --json
+<old> <new>` prints the findings as a JSON array on stdout (the same shape the
+native module returns -- the py/rust parity tests assert the two match byte for
+byte). See [compatibility.md](compatibility.md).
 
 ## Tasks
 

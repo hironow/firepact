@@ -155,6 +155,27 @@ fn compat_two_arg_breaking_exits_nonzero() {
 }
 
 #[test]
+fn compat_json_emits_findings_to_stdout() {
+    let old = write_tmp("v1j.json", V1);
+    let new = write_tmp("v2j.json", V2_SAFE);
+    let out = Command::new(BIN)
+        .args([
+            "compat",
+            "--json",
+            old.to_str().unwrap(),
+            new.to_str().unwrap(),
+        ])
+        .output()
+        .expect("run compat --json");
+    assert!(out.status.success());
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    // a JSON array of findings on stdout (not the stderr human report)
+    assert!(stdout.trim_start().starts_with('['), "stdout: {stdout}");
+    assert!(stdout.contains("\"verdict\":\"SAFE\""), "stdout: {stdout}");
+    assert!(stdout.contains("\"field\":\"b\""), "stdout: {stdout}");
+}
+
+#[test]
 fn emit_missing_file_exits_one() {
     let out = Command::new(BIN)
         .args(["emit", "/no/such/bundle.json"])

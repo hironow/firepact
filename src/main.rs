@@ -222,12 +222,34 @@ fn report(label: &str, findings: &[Finding]) {
     }
 }
 
+/// Serialize findings to the same compact JSON the PyO3 `compat` returns, so the
+/// binary and the native module can be checked for parity (`compat --json`).
+fn findings_json(findings: &[Finding]) -> String {
+    use firepact_core::compat::Verdict;
+    let arr: Vec<serde_json::Value> = findings
+        .iter()
+        .map(|f| {
+            serde_json::json!({
+                "def": f.def,
+                "field": f.field,
+                "verdict": match f.verdict {
+                    Verdict::Safe => "SAFE",
+                    Verdict::Breaking => "BREAKING",
+                },
+                "message": f.message,
+            })
+        })
+        .collect();
+    serde_json::Value::Array(arr).to_string()
+}
+
 fn cmd_compat(args: &[String]) -> i32 {
     // Form A: compat <old.json> <new.json>
     // Form B: compat --history <dir> --new <file>   (FULL_TRANSITIVE)
     if let (Some(dir), Some(new_path)) = (flag(args, "--history"), flag(args, "--new")) {
         return cmd_compat_history(&dir, &new_path);
     }
+    let json = args.iter().any(|a| a == "--json");
     let positionals: Vec<&String> = args.iter().filter(|a| !a.starts_with("--")).collect();
     if positionals.len() != 2 {
         eprintln!("compat: expected <old.json> <new.json> or --history <dir> --new <file>");
@@ -241,12 +263,22 @@ fn cmd_compat(args: &[String]) -> i32 {
         }
     };
     let findings = diff(&old, &new);
-    report("compat", &findings);
+    // `--json`: emit the findings as JSON on stdout (matches the PyO3 `compat`),
+    // for tooling and py<->rust parity checks. Otherwise report to stderr.
+    if json {
+        print!("{}", findings_json(&findings));
+    } else {
+        report("compat", &findings);
+    }
     if is_breaking(&findings) {
-        eprintln!("compat: BREAKING changes detected");
+        if !json {
+            eprintln!("compat: BREAKING changes detected");
+        }
         1
     } else {
-        eprintln!("compat: compatible");
+        if !json {
+            eprintln!("compat: compatible");
+        }
         0
     }
 }
