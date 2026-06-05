@@ -155,6 +155,32 @@ fn compat_two_arg_breaking_exits_nonzero() {
 }
 
 #[test]
+fn compat_history_skips_new_file_inside_dir() {
+    // --new living inside the history dir must not be diffed against itself
+    // (an identity diff is always SAFE and would mask an otherwise-empty history).
+    let dir = std::env::temp_dir().join(format!("firepact-self-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("mkdir");
+    let only = dir.join("only.json");
+    std::fs::write(&only, V1).unwrap();
+    let out = Command::new(BIN)
+        .args([
+            "compat",
+            "--history",
+            dir.to_str().unwrap(),
+            "--new",
+            only.to_str().unwrap(),
+        ])
+        .output()
+        .expect("run compat history self");
+    assert!(
+        out.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(String::from_utf8_lossy(&out.stderr).contains("all 0 past version"));
+}
+
+#[test]
 fn compat_history_form_checks_all_past_versions() {
     let dir = std::env::temp_dir().join(format!("firepact-hist-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("mkdir hist");
