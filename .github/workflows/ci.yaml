@@ -39,6 +39,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync
+      - run: cargo build --bin firepact # the binary front-end (py<->rust parity test)
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy .

@@ -12,20 +12,33 @@ from pathlib import Path
 import pytest
 from firepact.cli import build_plain_bundle, find_binary
 
+# Both front-ends must exist: the native PyO3 module (maturin) AND the cargo
+# binary. Skip the whole module if either is missing (e.g. a pip-only install, or
+# a pytest run that didn't `cargo build`); a CI job that has both runs it.
 _core = pytest.importorskip("firepact._core")
+try:
+    _BIN = find_binary()
+except FileNotFoundError:
+    pytest.skip("firepact binary not built (cargo build)", allow_module_level=True)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-# A rich, committed Firestore contract bundle (timestamps, enum, ref, nested,
-# vector, geopoint, ...): the exact bytes feed both front-ends, so no registry.
-CHAT_BUNDLE = (REPO_ROOT / "examples" / "gen" / "chat" / "bundle.json").read_text(
-    encoding="utf-8"
-)
-SCHEMAS = REPO_ROOT / "examples" / "compat" / "schemas"
+EXAMPLES = REPO_ROOT / "examples"
+# Every committed example contract bundle feeds both front-ends (the exact bytes,
+# so no registry is needed). Covering all of them makes the example artifacts
+# rust<->py verified, not just the chat one.
+GEN_BUNDLES = {
+    "chat": (EXAMPLES / "gen" / "chat" / "bundle.json").read_text(encoding="utf-8"),
+    "realtime_app": (EXAMPLES / "gen" / "realtime_app" / "bundle.json").read_text(
+        encoding="utf-8"
+    ),
+}
+CHAT_BUNDLE = GEN_BUNDLES["chat"]
+SCHEMAS = EXAMPLES / "compat" / "schemas"
 
 
 def _binary(args: list[str], stdin: str | None = None) -> str:
     result = subprocess.run(
-        [find_binary(), *args],
+        [_BIN, *args],
         input=stdin.encode("utf-8") if stdin is not None else None,
         capture_output=True,
         check=True,
@@ -33,8 +46,9 @@ def _binary(args: list[str], stdin: str | None = None) -> str:
     return result.stdout.decode("utf-8")
 
 
-def test_emit_parity() -> None:
-    assert _core.emit(CHAT_BUNDLE) == _binary(["emit", "-"], stdin=CHAT_BUNDLE)
+@pytest.mark.parametrize("bundle", GEN_BUNDLES.values(), ids=list(GEN_BUNDLES))
+def test_emit_parity(bundle: str) -> None:
+    assert _core.emit(bundle) == _binary(["emit", "-"], stdin=bundle)
 
 
 def test_emit_plain_parity() -> None:
