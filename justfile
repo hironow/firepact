@@ -91,11 +91,15 @@ lint-md:
 fmt-md:
     bunx --bun markdownlint-cli2 --fix "**/*.md"
 
+# Check markdown relative links resolve (files + heading anchors)
+check-links:
+    python3 scripts/check_links.py
+
 # Run all fast tests
 test: test-rust test-py
 
 # Run all linters / type checks
-lint: lint-rust lint-py lint-md
+lint: lint-rust lint-py lint-md check-links
 
 # Format all sources
 fmt: fmt-rust fmt-py fmt-md
