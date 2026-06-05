@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust (fmt / clippy / test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  python:
+    name: Python (ruff / mypy / pytest) - locked
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable # uv sync builds the PyO3 extension
+      - uses: Swatinem/rust-cache@v2
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy .
+      - run: uv run pytest # unit + integration (exact golden on locked pydantic)
+
+  pydantic-matrix:
+    name: Pydantic drift canary
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pydantic: ["2.9.*", "2.10.*", "2.11.*", "2.12.*", "2.13.*"]
+    env:
+      # Skip the exact schema-layer golden (frozen against the locked pydantic);
+      # the emit-layer golden + semantic checks must still hold across versions.
+      FIREPACT_PYDANTIC_MATRIX: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Run tests against pydantic ${{ matrix.pydantic }}
+        run: uv run --with "pydantic==${{ matrix.pydantic }}" pytest tests/unit tests/integration
+
+  frontend-typecheck:
+    name: Frontend tsc (generated types)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: oven-sh/setup-bun@v2
+      - run: cargo build
+      - name: Generate TypeScript from the contract fixture
+        run: ./target/debug/firepact emit fixtures/message.bundle.json > tests/e2e/frontend/generated.ts
+      - name: Type-check the consumer against the generated types
+        working-directory: tests/e2e/frontend
+        run: |
+          bun install
+          bunx tsc --noEmit
+
+  semgrep:
+    name: Semgrep (project rules)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: extractions/setup-just@v3
+      - uses: returntocorp/semgrep-action@v1
+        if: ${{ hashFiles('.semgrep/rules/**/*.yaml') != '' }}
+      - name: Run project semgrep rules (no-op until rules exist)
+        run: just semgrep

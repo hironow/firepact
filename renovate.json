@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "labels": ["dependencies"],
+  "lockFileMaintenance": { "enabled": true },
+  "packageRules": [
+    {
+      "description": "Pydantic drives schema output; surface bumps prominently for the matrix.",
+      "matchManagers": ["pep621"],
+      "matchPackageNames": ["pydantic", "pydantic-core"],
+      "labels": ["dependencies", "pydantic"]
+    },
+    {
+      "description": "Rust PyO3/maturin packaging chain.",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["pyo3"],
+      "labels": ["dependencies", "pyo3"]
+    },
+    {
+      "description": "Group the e2e frontend (firebase/typescript) bumps.",
+      "matchManagers": ["npm"],
+      "groupName": "e2e frontend"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    }
+  ]
+}
