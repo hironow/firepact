@@ -2,6 +2,13 @@
 name = "firepact-core"
 version = "0.1.0"
 edition = "2021"
+description = "Firestore-aware contract emitter and FULL_TRANSITIVE compatibility gate (the Rust core behind firepact)."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/hironow/firepact"
+homepage = "https://github.com/hironow/firepact"
+keywords = ["firestore", "typescript", "codegen", "pydantic", "json-schema"]
+categories = ["development-tools", "command-line-utilities"]
 
 [lib]
 name = "firepact_core"
