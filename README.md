@@ -50,6 +50,21 @@ firepact-compat --history schemas --new schemas/v1.json   # gate compatibility
 
 # as a contributor
 just build   # Rust core + `firepact` binary
-just test    # all tests        just lint   # rust + python checks
+just test    # all tests        just lint   # rust + python + markdown checks
 just compat  # gate the example contract against schemas/
 ```
+
+## Supported versions
+
+Verified in CI (see [`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)).
+
+| Component | Supported | Notes |
+|---|---|---|
+| Python | 3.11 – 3.13 | test matrix |
+| Pydantic | 2.9 – 2.13 | drift canary; the exact schema golden is pinned to the locked version |
+| JSON Schema | Draft 2020-12 | Pydantic's default dialect |
+| TypeScript (output) | 5.x / 6.x / 7.x | type-checks under `verbatimModuleSyntax` + `isolatedModules` |
+| firebase JS SDK | v11+ | `Timestamp`, `GeoPoint`, `DocumentReference`, `Bytes`, `VectorValue`, `FieldValue`, `UpdateData`, `FirestoreDataConverter` |
+| Rust | 1.75+ | MSRV (`Cargo.toml`) |
+
+Dependency bumps within these ranges are tracked by Renovate.
