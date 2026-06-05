@@ -27,7 +27,7 @@ serde_json = "1.0"
 # abi3-py311: build a single stable-ABI wheel per platform that runs on
 # CPython 3.11+ (incl. future versions), collapsing the per-version wheel matrix.
 # The bindings only use abi3-safe APIs (str in/out, module + function registration).
-pyo3 = { version = "0.25", features = ["extension-module", "abi3-py311"], optional = true }
+pyo3 = { version = "0.28", features = ["extension-module", "abi3-py311"], optional = true }
 
 [features]
 python = ["dep:pyo3"]
