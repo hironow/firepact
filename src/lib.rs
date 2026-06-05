@@ -134,6 +134,13 @@ impl<'a> Ctx<'a> {
                 continue;
             }
 
+            // readOnly fields (e.g. Pydantic @computed_field) are derived on the
+            // backend, not provided by the writer: present on read, excluded from
+            // the write view (OpenAPI readOnly semantics).
+            if view == View::Write && prop.get("readOnly").and_then(Value::as_bool) == Some(true) {
+                continue;
+            }
+
             let ty = self.render_type(prop, view);
             let optional = self.is_optional(key, prop, view, &required);
             let q = if optional { "?" } else { "" };
