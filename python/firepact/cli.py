@@ -91,6 +91,34 @@ def emit_typescript(bundle: dict[str, object]) -> str:
     return emitted
 
 
+def emit_shared_typescript(
+    bundle: dict[str, object], shared_path: str, shared_names: list[str]
+) -> str:
+    """Emit TypeScript where ``shared_names`` are imported from ``shared_path``
+    (a TS module specifier relative to the output) instead of redefined."""
+    payload = json.dumps(bundle)
+    try:
+        from firepact import _core
+    except ImportError:
+        result = subprocess.run(
+            [
+                find_binary(),
+                "emit",
+                "--shared",
+                shared_path,
+                "--shared-names",
+                ",".join(shared_names),
+                "-",
+            ],
+            input=payload.encode("utf-8"),
+            capture_output=True,
+            check=True,
+        )
+        return result.stdout.decode("utf-8")
+    emitted: str = _core.emit_shared(payload, shared_path, shared_names)
+    return emitted
+
+
 def generate_typescript_defs(module: str, output: str | None = None) -> str:
     """Import ``module``, build the bundle, emit TypeScript (prior-tool-compatible API)."""
     typescript = emit_typescript(bundle_for_module(module))
@@ -176,6 +204,16 @@ def main(argv: list[str] | None = None) -> int:
         "Firestore views (replaces the legacy pydantic2ts plain output).",
     )
     parser.add_argument(
+        "--shared",
+        help="TS module specifier (relative to --output) to IMPORT --shared-names "
+        "from instead of redefining them (cross-file single source).",
+    )
+    parser.add_argument(
+        "--shared-names",
+        default="",
+        help="Comma-separated type names to import from --shared (e.g. shared enums).",
+    )
+    parser.add_argument(
         "--exclude",
         action="append",
         default=[],
@@ -201,10 +239,16 @@ def main(argv: list[str] | None = None) -> int:
             encoding="utf-8",
         )
 
+    if args.shared:
+        names = [n for n in args.shared_names.split(",") if n]
+        typescript = emit_shared_typescript(bundle, args.shared, names)
+    else:
+        typescript = emit_typescript(bundle)
+
     if args.output:
-        Path(args.output).write_text(emit_typescript(bundle), encoding="utf-8")
+        Path(args.output).write_text(typescript, encoding="utf-8")
     elif not args.bundle_out:
-        sys.stdout.write(emit_typescript(bundle))
+        sys.stdout.write(typescript)
     return 0
 
 

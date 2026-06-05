@@ -25,10 +25,27 @@ struct Ctx<'a> {
     /// converter/path helper. Used by `emit_plain` to replace the legacy
     /// pydantic2ts plain output (datetime -> string, etc.).
     plain: bool,
+    /// `$def` names to IMPORT from another module instead of defining here
+    /// (cross-file single source); referenced ones become a type-only import.
+    shared: BTreeSet<String>,
+    /// Of `shared`, the names actually referenced by the output (-> import line).
+    shared_used: BTreeSet<String>,
 }
 
 /// Entry point. `bundle` is the object returned by models_json_schema (has "$defs").
 pub fn emit(bundle: &Value) -> String {
+    emit_inner(bundle, BTreeSet::new(), "")
+}
+
+/// Like [`emit`], but the named `$defs` are IMPORTED from `shared_path` (a TS
+/// module specifier relative to the output file) instead of being defined here.
+/// Used for cross-file single-sourcing of shared types (e.g. enums that also live
+/// in a plain DTO module). Names not referenced by the output are not imported.
+pub fn emit_shared(bundle: &Value, shared_path: &str, shared_names: &[String]) -> String {
+    emit_inner(bundle, shared_names.iter().cloned().collect(), shared_path)
+}
+
+fn emit_inner(bundle: &Value, shared: BTreeSet<String>, shared_path: &str) -> String {
     let empty = Map::new();
     let defs = bundle
         .get("$defs")
@@ -40,12 +57,18 @@ pub fn emit(bundle: &Value) -> String {
         used: BTreeSet::new(),
         compat: false,
         plain: false,
+        shared,
+        shared_used: BTreeSet::new(),
     };
 
     let mut body = String::new();
     let mut converters = String::new();
     // deterministic order: $defs is a sorted map -> stable output for diffing.
     for (name, node) in defs.iter() {
+        // Shared types are imported, not redefined.
+        if ctx.shared.contains(name.as_str()) {
+            continue;
+        }
         if node.get("enum").is_some() {
             body.push_str(&render_enum(name, node));
         } else if is_object(node) {
@@ -81,6 +104,15 @@ pub fn emit(bundle: &Value) -> String {
             syms.join(", ")
         ));
     }
+    // Cross-file shared types imported from the sibling module.
+    if !ctx.shared_used.is_empty() {
+        let names: Vec<&str> = ctx.shared_used.iter().map(String::as_str).collect();
+        out.push_str(&format!(
+            "import type {{ {} }} from \"{}\";\n\n",
+            names.join(", "),
+            shared_path
+        ));
+    }
     out.push_str(&body);
     out
 }
@@ -100,6 +132,8 @@ pub fn emit_plain(bundle: &Value) -> String {
         used: BTreeSet::new(),
         compat: false,
         plain: true,
+        shared: BTreeSet::new(),
+        shared_used: BTreeSet::new(),
     };
     let mut body = String::new();
     for (name, node) in defs.iter() {
@@ -398,8 +432,13 @@ impl<'a> Ctx<'a> {
         }
     }
 
-    fn render_ref(&self, r: &str, view: View) -> String {
+    fn render_ref(&mut self, r: &str, view: View) -> String {
         let name = r.rsplit('/').next().unwrap_or(r);
+        // Shared types are imported from a sibling module, not defined here; the
+        // referenced name still renders the same (the import provides it).
+        if self.shared.contains(name) {
+            self.shared_used.insert(name.to_string());
+        }
         let def = self.defs.get(name);
         let is_enum = def.map(|d| d.get("enum").is_some()).unwrap_or(false);
         if is_enum {
@@ -500,6 +539,8 @@ pub fn field_type(defs: &Map<String, Value>, prop: &Value, view: View) -> String
         used: BTreeSet::new(),
         compat: false,
         plain: false,
+        shared: BTreeSet::new(),
+        shared_used: BTreeSet::new(),
     };
     ctx.render_type(prop, view)
 }
@@ -514,6 +555,8 @@ pub fn read_type_signature(defs: &Map<String, Value>, prop: &Value) -> String {
         used: BTreeSet::new(),
         compat: true,
         plain: false,
+        shared: BTreeSet::new(),
+        shared_used: BTreeSet::new(),
     };
     ctx.render_type(prop, View::Read)
 }
@@ -605,6 +648,19 @@ mod python {
         Ok(crate::emit(&bundle))
     }
 
+    /// Like `emit`, but `shared_names` are imported from `shared_path` (a TS module
+    /// specifier relative to the output file) instead of being defined.
+    #[pyfunction]
+    fn emit_shared(
+        bundle_json: &str,
+        shared_path: &str,
+        shared_names: Vec<String>,
+    ) -> PyResult<String> {
+        let bundle: serde_json::Value =
+            serde_json::from_str(bundle_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(crate::emit_shared(&bundle, shared_path, &shared_names))
+    }
+
     /// Emit plain (non-Firestore DTO) TypeScript from a standard JSON Schema bundle.
     #[pyfunction]
     fn emit_plain(bundle_json: &str) -> PyResult<String> {
@@ -643,6 +699,7 @@ mod python {
     fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
         m.add_function(wrap_pyfunction!(emit, m)?)?;
         m.add_function(wrap_pyfunction!(emit_plain, m)?)?;
+        m.add_function(wrap_pyfunction!(emit_shared, m)?)?;
         m.add_function(wrap_pyfunction!(compat, m)?)?;
         Ok(())
     }

@@ -1,5 +1,5 @@
 use firepact_core::compat::{diff, is_breaking, Finding};
-use firepact_core::{emit, emit_plain, field_type, View};
+use firepact_core::{emit, emit_plain, emit_shared, field_type, View};
 use serde_json::{json, Value};
 use std::io::Read;
 use std::path::PathBuf;
@@ -144,7 +144,38 @@ fn read_input(arg: Option<&String>) -> Result<String, String> {
 
 fn cmd_emit(args: &[String]) -> i32 {
     let plain = args.iter().any(|a| a == "--plain");
-    let input_arg = args.iter().find(|a| !a.starts_with("--"));
+    let shared = flag(args, "--shared");
+    let shared_names: Vec<String> = flag(args, "--shared-names")
+        .unwrap_or_default()
+        .split(',')
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .collect();
+    // The input path/`-` is the first positional, skipping flags and the values
+    // of value-flags (--shared / --shared-names).
+    let input_arg = {
+        let mut found = None;
+        let mut skip_next = false;
+        for a in args {
+            if skip_next {
+                skip_next = false;
+                continue;
+            }
+            match a.as_str() {
+                "--shared" | "--shared-names" => skip_next = true,
+                "-" => {
+                    found = Some(a);
+                    break;
+                }
+                s if !s.starts_with('-') => {
+                    found = Some(a);
+                    break;
+                }
+                _ => {}
+            }
+        }
+        found
+    };
     let raw = match read_input(input_arg) {
         Ok(s) => s,
         Err(e) => {
@@ -159,14 +190,12 @@ fn cmd_emit(args: &[String]) -> i32 {
             return 1;
         }
     };
-    print!(
-        "{}",
-        if plain {
-            emit_plain(&bundle)
-        } else {
-            emit(&bundle)
-        }
-    );
+    let out = match (plain, shared) {
+        (true, _) => emit_plain(&bundle),
+        (false, Some(path)) => emit_shared(&bundle, &path, &shared_names),
+        (false, None) => emit(&bundle),
+    };
+    print!("{out}");
     0
 }
 
