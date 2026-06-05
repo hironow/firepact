@@ -125,6 +125,14 @@
           "title": "Metadata",
           "type": "object"
         },
+        "pinned": {
+          "title": "Pinned",
+          "type": "boolean"
+        },
+        "priority": {
+          "title": "Priority",
+          "type": "integer"
+        },
         "reactions": {
           "items": {
             "$ref": "#/$defs/Reaction"
@@ -171,6 +179,8 @@
         "kind",
         "location",
         "metadata",
+        "pinned",
+        "priority",
         "reactions",
         "selection",
         "tags",

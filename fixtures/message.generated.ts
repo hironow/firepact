@@ -39,6 +39,8 @@ export interface Message {
   kind?: MessageKind | (string & {});
   location?: GeoPoint;
   metadata?: Record<string, string>;
+  pinned?: boolean;
+  priority?: number;
   reactions?: Reaction[];
   selection?: [number, number];
   tags?: string[];
@@ -55,6 +57,8 @@ export interface MessageWrite {
   kind: MessageKind;
   location: GeoPoint;
   metadata: Record<string, string>;
+  pinned: boolean;
+  priority: number;
   reactions: ReactionWrite[];
   selection: [number, number];
   tags: string[];

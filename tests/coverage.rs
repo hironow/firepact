@@ -49,6 +49,9 @@ fn golden_bundle_exercises_every_x_firestore_parameter() {
 fn golden_ts_exercises_every_firestore_wire_type() {
     let ts = read("fixtures/message.generated.ts");
     let required = [
+        ": string;",                                // string
+        ": number;",                                // number (Integer/Double)
+        ": boolean;",                               // boolean
         ": Timestamp;",                             // non-server datetime (read)
         "Timestamp | null",                         // server timestamp (read)
         "Timestamp | Date",                         // non-server datetime (write)

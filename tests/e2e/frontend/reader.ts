@@ -63,6 +63,23 @@ const unsubscribe = onSnapshot(
     if (m.thumbnail !== undefined && !(m.thumbnail instanceof Bytes)) {
       violations.push("thumbnail not Bytes");
     }
+    if (m.pinned !== undefined && typeof m.pinned !== "boolean") {
+      violations.push("pinned not boolean");
+    }
+    if (m.priority !== undefined && typeof m.priority !== "number") {
+      violations.push("priority not number");
+    }
+    // null field value (avatarUrl was written as null)
+    if (m.authorProfile !== undefined && m.authorProfile.avatarUrl !== null) {
+      violations.push("avatarUrl not null");
+    }
+    // map (nested object) and array
+    if (m.authorProfile !== undefined && typeof m.authorProfile !== "object") {
+      violations.push("authorProfile not object");
+    }
+    if (m.tags !== undefined && !Array.isArray(m.tags)) {
+      violations.push("tags not array");
+    }
 
     clearTimeout(timeout);
     unsubscribe();
@@ -80,6 +97,9 @@ const unsubscribe = onSnapshot(
         editedAtIsTimestamp: m.editedAt instanceof Timestamp,
         locationIsGeoPoint: m.location instanceof GeoPoint,
         thumbnailIsBytes: m.thumbnail instanceof Bytes,
+        pinnedIsBool: typeof m.pinned === "boolean",
+        priorityIsNumber: typeof m.priority === "number",
+        avatarUrlIsNull: m.authorProfile?.avatarUrl === null,
         attachmentKind: m.attachment?.kind ?? null,
         selection: m.selection ?? [],
         tags: m.tags ?? [],

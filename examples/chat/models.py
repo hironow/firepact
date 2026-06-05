@@ -72,7 +72,9 @@ class Message(CamelModel):
     kind: MessageKind
     location: Annotated[tuple[float, float], FirestoreGeoPoint()]  # -> GeoPoint
     metadata: dict[str, str]
+    pinned: bool  # boolean
+    priority: int  # number (Firestore Integer; Double maps to number too)
     reactions: list[Reaction]
     selection: tuple[int, int]  # plain tuple -> [number, number]
     tags: list[str]
-    thumbnail: bytes  # -> Uint8Array
+    thumbnail: bytes  # -> Bytes

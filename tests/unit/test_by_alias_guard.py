@@ -32,6 +32,8 @@ def _sample_message() -> Message:
         kind=MessageKind.TEXT,
         location=(35.6, 139.7),
         metadata={"client": "web"},
+        pinned=True,
+        priority=3,
         reactions=[Reaction(emoji="thumbsup", count=2)],
         selection=(0, 10),
         tags=["greeting"],

@@ -17,7 +17,10 @@ export function summarize(m: Message): string {
   const loc: GeoPoint | undefined = m.location; // -> GeoPoint
   const bytes: number = m.thumbnail?.toUint8Array().byteLength ?? 0; // -> Bytes
   const span: number = (m.selection?.[1] ?? 0) - (m.selection?.[0] ?? 0); // tuple [number, number]
-  return `${idLen}:${body}:${String(created)}:${kind}:${tagCount}:${reactionCount}:${String(edited)}:${String(loc)}:${bytes}:${span}`;
+  const pinned: boolean = m.pinned ?? false; // boolean
+  const priority: number = m.priority ?? 0; // number
+  const avatar: string | null = m.authorProfile?.avatarUrl ?? null; // nullable string
+  return `${idLen}:${body}:${String(created)}:${kind}:${tagCount}:${reactionCount}:${String(edited)}:${String(loc)}:${bytes}:${span}:${pinned}:${priority}:${String(avatar)}`;
 }
 
 // The converter is what makes `id: string` hold at runtime.
