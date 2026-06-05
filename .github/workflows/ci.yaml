@@ -44,7 +44,9 @@ jobs:
       # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
       # no account needed. Must precede any uv/pip install.
       - uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
-      - run: uv sync
+      # --locked fails if uv.lock drifts from pyproject.toml (e.g. a version bump
+      # that forgot to sync the lock), the uv-side counterpart to cargo --locked.
+      - run: uv sync --locked
       - run: cargo build --bin firepact # the binary front-end (py<->rust parity test)
       - run: uv run ruff check .
       - run: uv run ruff format --check .
