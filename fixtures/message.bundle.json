@@ -23,12 +23,33 @@
           "x-firestore-server-timestamp": true,
           "x-firestore-type": "timestamp"
         },
+        "editedAt": {
+          "format": "date-time",
+          "title": "Editedat",
+          "type": "string",
+          "x-firestore-type": "timestamp"
+        },
         "id": {
           "title": "Id",
           "type": "string"
         },
         "kind": {
           "$ref": "#/$defs/MessageKind"
+        },
+        "location": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Location",
+          "type": "array",
+          "x-firestore-type": "geopoint"
         },
         "metadata": {
           "additionalProperties": {
@@ -50,6 +71,12 @@
           },
           "title": "Tags",
           "type": "array"
+        },
+        "thumbnail": {
+          "format": "binary",
+          "title": "Thumbnail",
+          "type": "string",
+          "x-firestore-type": "bytes"
         }
       },
       "required": [
@@ -58,10 +85,13 @@
         "authorProfile",
         "body",
         "createdAt",
+        "editedAt",
         "kind",
+        "location",
         "metadata",
         "reactions",
-        "tags"
+        "tags",
+        "thumbnail"
       ],
       "title": "Message",
       "type": "object",

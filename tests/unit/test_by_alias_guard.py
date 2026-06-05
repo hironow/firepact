@@ -21,10 +21,13 @@ def _sample_message() -> Message:
         author_profile=Profile(display_name="Ada", avatar_url=None),
         body="hello",
         created_at=datetime(2020, 1, 1, tzinfo=UTC),
+        edited_at=datetime(2020, 1, 2, tzinfo=UTC),
         kind=MessageKind.TEXT,
+        location=(35.6, 139.7),
         metadata={"client": "web"},
         reactions=[Reaction(emoji="thumbsup", count=2)],
         tags=["greeting"],
+        thumbnail=b"\x01\x02\x03",
     )
 
 

@@ -14,6 +14,7 @@ import shutil
 import socket
 import subprocess
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -75,10 +76,13 @@ def written_doc() -> Iterator[None]:
         "authorProfile": {"displayName": "Ada", "avatarUrl": None},
         "body": "hello from e2e",
         "createdAt": firestore.SERVER_TIMESTAMP,
+        "editedAt": datetime(2020, 1, 2, tzinfo=UTC),
         "kind": "text",
+        "location": firestore.GeoPoint(35.6, 139.7),
         "metadata": {"client": "web"},
         "reactions": [{"emoji": "thumbsup", "count": 2}],
         "tags": ["greeting"],
+        "thumbnail": b"\x01\x02\x03",
     }
     ref = db.collection("rooms").document("r1").collection("messages").document("m1")
     ref.set(payload)
@@ -127,3 +131,6 @@ def test_onsnapshot_reads_written_doc(generated_ts: Path, written_doc: None) -> 
     assert payload["kind"] == "text"
     assert payload["createdAtIsTimestamp"] is True
     assert payload["authorIsRef"] is True
+    assert payload["editedAtIsTimestamp"] is True
+    assert payload["locationIsGeoPoint"] is True
+    assert payload["thumbnailIsBytes"] is True

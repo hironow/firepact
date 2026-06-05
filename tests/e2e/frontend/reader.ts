@@ -7,6 +7,7 @@ import {
   connectFirestoreEmulator,
   doc,
   DocumentReference,
+  GeoPoint,
   getFirestore,
   onSnapshot,
   Timestamp,
@@ -52,6 +53,15 @@ const unsubscribe = onSnapshot(
       violations.push("author not DocumentReference");
     }
     if (typeof m.kind !== "string") violations.push("kind not string");
+    if (m.editedAt !== undefined && !(m.editedAt instanceof Timestamp)) {
+      violations.push("editedAt not Timestamp");
+    }
+    if (m.location !== undefined && !(m.location instanceof GeoPoint)) {
+      violations.push("location not GeoPoint");
+    }
+    if (m.thumbnail !== undefined && !(m.thumbnail instanceof Uint8Array)) {
+      violations.push("thumbnail not Uint8Array");
+    }
 
     clearTimeout(timeout);
     unsubscribe();
@@ -66,6 +76,9 @@ const unsubscribe = onSnapshot(
         kind: m.kind,
         createdAtIsTimestamp: m.createdAt instanceof Timestamp,
         authorIsRef: m.author instanceof DocumentReference,
+        editedAtIsTimestamp: m.editedAt instanceof Timestamp,
+        locationIsGeoPoint: m.location instanceof GeoPoint,
+        thumbnailIsBytes: m.thumbnail instanceof Uint8Array,
         tags: m.tags ?? [],
       }),
     );
