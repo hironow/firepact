@@ -1,5 +1,5 @@
 use firepact_core::compat::{diff, is_breaking, Finding};
-use firepact_core::{emit, field_type, View};
+use firepact_core::{emit, emit_plain, field_type, View};
 use serde_json::{json, Value};
 use std::io::Read;
 use std::path::PathBuf;
@@ -143,7 +143,9 @@ fn read_input(arg: Option<&String>) -> Result<String, String> {
 }
 
 fn cmd_emit(args: &[String]) -> i32 {
-    let raw = match read_input(args.first()) {
+    let plain = args.iter().any(|a| a == "--plain");
+    let input_arg = args.iter().find(|a| !a.starts_with("--"));
+    let raw = match read_input(input_arg) {
         Ok(s) => s,
         Err(e) => {
             eprintln!("{e}");
@@ -157,7 +159,14 @@ fn cmd_emit(args: &[String]) -> i32 {
             return 1;
         }
     };
-    print!("{}", emit(&bundle));
+    print!(
+        "{}",
+        if plain {
+            emit_plain(&bundle)
+        } else {
+            emit(&bundle)
+        }
+    );
     0
 }
 

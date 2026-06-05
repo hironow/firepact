@@ -99,6 +99,58 @@ def generate_typescript_defs(module: str, output: str | None = None) -> str:
     return typescript
 
 
+def build_plain_bundle(module: str) -> dict[str, object]:
+    """Import ``module`` and build a STANDARD JSON Schema bundle for plain DTOs.
+
+    Unlike :func:`bundle_for_module`, this uses the default schema generator (no
+    ``x-firestore-*`` stamping, so ``datetime`` -> ISO string) and collects every
+    Pydantic model defined in the module (the realtime registry is not used). It
+    replaces the legacy ``pydantic2ts`` plain output.
+    """
+    from pydantic import BaseModel
+    from pydantic.json_schema import models_json_schema
+
+    if not _MODULE_NAME.fullmatch(module):
+        msg = f"invalid module path: {module!r}"
+        raise ValueError(msg)
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.insert(0, cwd)
+    mod = importlib.import_module(module)
+    # Only models DEFINED in this module (not imported bases / external models).
+    models = [
+        obj
+        for obj in vars(mod).values()
+        if isinstance(obj, type)
+        and issubclass(obj, BaseModel)
+        and obj is not BaseModel
+        and obj.__module__ == mod.__name__
+    ]
+    _keymap, bundle = models_json_schema(
+        [(m, "serialization") for m in models],
+        by_alias=True,
+        ref_template="#/$defs/{model}",
+    )
+    return bundle
+
+
+def emit_plain_typescript(bundle: dict[str, object]) -> str:
+    """Emit plain DTO TypeScript, preferring the native module (binary fallback)."""
+    payload = json.dumps(bundle)
+    try:
+        from firepact import _core
+    except ImportError:
+        result = subprocess.run(
+            [find_binary(), "emit", "--plain", "-"],
+            input=payload.encode("utf-8"),
+            capture_output=True,
+            check=True,
+        )
+        return result.stdout.decode("utf-8")
+    emitted: str = _core.emit_plain(payload)
+    return emitted
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="firepact-gen",
@@ -118,12 +170,26 @@ def main(argv: list[str] | None = None) -> int:
         help="Write the deterministic contract bundle JSON here (for schemas/ + compat).",
     )
     parser.add_argument(
+        "--plain",
+        action="store_true",
+        help="Plain DTO mode: every model in the module, datetime -> string, no "
+        "Firestore views (replaces the legacy pydantic2ts plain output).",
+    )
+    parser.add_argument(
         "--exclude",
         action="append",
         default=[],
         help="Accepted for prior-tool compatibility (no-op).",
     )
     args = parser.parse_args(argv)
+
+    if args.plain:
+        typescript = emit_plain_typescript(build_plain_bundle(args.module))
+        if args.output:
+            Path(args.output).write_text(typescript, encoding="utf-8")
+        else:
+            sys.stdout.write(typescript)
+        return 0
 
     bundle = bundle_for_module(args.module)
 
