@@ -103,7 +103,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: extractions/setup-just@v3
-      - uses: returntocorp/semgrep-action@v1
-        if: ${{ hashFiles('.semgrep/rules/**/*.yaml') != '' }}
+      - name: Install semgrep
+        run: pipx install semgrep
       - name: Run project semgrep rules (no-op until rules exist)
         run: just semgrep
