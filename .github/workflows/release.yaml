@@ -1,0 +1,184 @@
+# Release: OIDC Trusted Publishing, no long-lived publish tokens (ADR 0013).
+#
+# Trigger: pushing a `v*` tag. Build + provenance run to completion BEFORE any
+# publish. crates.io publishes first, then PyPI (the two registries are not
+# transactional -- see ADR 0013 / PUBLISH_HOWTO.md for the split-failure recovery:
+# re-run only the failed publish job; the succeeded side is left as-is).
+#
+# Publish auth is OIDC only:
+#   - crates.io: rust-lang/crates-io-auth-action mints a 30-min token (job-scoped,
+#     auto-revoked at job end). Trusted Publishing is ENFORCED on the crate.
+#   - PyPI: pypa/gh-action-pypi-publish uploads via Trusted Publishing and emits
+#     PEP 740 publish attestations automatically (verified on PyPI).
+# Additively, actions/attest-build-provenance produces a GitHub SLSA build
+# provenance for the wheels (a SEPARATE artifact, verified with `gh attestation
+# verify` -- NOT the PyPI PEP 740 attestation).
+#
+# Security notes:
+#   - No untrusted event input is interpolated into any run: step (tag-triggered;
+#     the only ${{ }} in a shell context is steps.auth.outputs.token, passed via env).
+#   - Every action is pinned to a full commit SHA (repo policy: sha_pinning_required).
+#   - The trusted-publisher binding on both registries must match EXACTLY:
+#     repo hironow/firepact, workflow filename release.yaml, environment release.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+# Read-only by default; publish jobs elevate to id-token: write at the job level.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  # Never cancel a release run mid-publish.
+  cancel-in-progress: false
+
+jobs:
+  linux-wheels:
+    name: wheels (linux ${{ matrix.target }})
+    if: github.repository == 'hironow/firepact'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          target: ${{ matrix.target }}
+          manylinux: auto
+          command: build
+          # The manylinux container ships the CPython interpreters; build one wheel
+          # per supported version (requires-python >=3.11,<3.15).
+          args: >-
+            --release --out dist --features python
+            -i python3.11 python3.12 python3.13 python3.14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wheels-linux-${{ matrix.target }}
+          path: dist
+
+  native-wheels:
+    name: wheels (${{ matrix.platform.os }} ${{ matrix.platform.target }} py${{ matrix.python }})
+    if: github.repository == 'hironow/firepact'
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+        platform:
+          - { os: macos-13, target: x86_64 }
+          - { os: macos-14, target: aarch64 }
+          - { os: windows-latest, target: x64 }
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          target: ${{ matrix.platform.target }}
+          command: build
+          args: --release --out dist --features python --interpreter python
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wheels-${{ matrix.platform.os }}-${{ matrix.platform.target }}-py${{ matrix.python }}
+          path: dist
+
+  sdist:
+    name: sdist
+    if: github.repository == 'hironow/firepact'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        with:
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wheels-sdist
+          path: dist
+
+  provenance:
+    name: SLSA build provenance (GitHub artifact attestation)
+    needs: [linux-wheels, native-wheels, sdist]
+    if: github.repository == 'hironow/firepact'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+      - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: "dist/*"
+
+  crates-publish:
+    name: Publish firepact-core to crates.io (OIDC)
+    # Linearized so nothing publishes until build + provenance are recorded:
+    #   builds -> provenance -> crates.io -> PyPI (ADR 0013). `provenance` already
+    #   needs all the build jobs, so depending on it gates on the full build too.
+    needs: [provenance]
+    if: github.repository == 'hironow/firepact'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      # ubuntu-latest ships a stable Rust toolchain preinstalled; no toolchain
+      # action is needed (and it keeps the allowlist surface minimal).
+      - name: Mint a short-lived crates.io token via OIDC
+        id: auth
+        uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1.0.4
+      - name: cargo publish (idempotent -- skip if this version is already on crates.io)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: |
+          set -euo pipefail
+          version="$(cargo metadata --no-deps --format-version 1 \
+            | jq -r '.packages[] | select(.name == "firepact-core") | .version')"
+          # 200 = already published (bootstrap or a prior partial run); 404 = new.
+          # No untrusted input here: `version` comes from Cargo.toml via cargo metadata.
+          if curl -sfo /dev/null -H 'User-Agent: firepact-release' \
+               "https://crates.io/api/v1/crates/firepact-core/${version}"; then
+            echo "firepact-core ${version} is already on crates.io -- skipping cargo publish."
+          else
+            cargo publish -p firepact-core
+          fi
+
+  pypi-publish:
+    name: Publish firepact to PyPI (OIDC + PEP 740 attestations)
+    # crates.io first (which already gated on provenance), then PyPI.
+    needs: [crates-publish]
+    if: github.repository == 'hironow/firepact'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+      - name: Publish to PyPI via Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        with:
+          packages-dir: dist
+          # Idempotent re-runs: if a prior attempt uploaded some files before
+          # failing, skip the ones already on PyPI instead of colliding. PyPI never
+          # allows overwriting an existing file, so this is the safe retry path.
+          skip-existing: true
+          # PEP 740 attestations are generated automatically (default since v1.11).
