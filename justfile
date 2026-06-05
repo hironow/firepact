@@ -32,8 +32,12 @@ lint-rust:
 sync:
     uv sync
 
-# Run the Python test suite (needs the firepact binary for the chain test)
-test-py: build
+# Rebuild the in-tree PyO3 extension (uv skips it on same-version source edits)
+build-ext:
+    uv sync --reinstall-package firepact
+
+# Run the Python test suite (rebuilds the native ext so it tracks Rust changes)
+test-py: build-ext
     uv run pytest
 
 # Lint + type-check Python
@@ -48,7 +52,7 @@ fmt-py:
 # --- End-to-end (real Firestore emulator + onSnapshot) ---
 
 # Run the E2E suite (needs the firestore emulator on 127.0.0.1:8080 and bun)
-test-e2e: build
+test-e2e: build build-ext
     uv run --group e2e pytest tests/e2e -v
 
 # --- Aggregate (Node/e2e recipes are wired in as those layers land) ---
