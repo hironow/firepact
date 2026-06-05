@@ -110,6 +110,10 @@ def main(argv: list[str] | None = None) -> int:
         "--output", "-o", help="Write TypeScript here (default: stdout)."
     )
     parser.add_argument(
+        "--bundle-out",
+        help="Write the deterministic contract bundle JSON here (for schemas/ + compat).",
+    )
+    parser.add_argument(
         "--exclude",
         action="append",
         default=[],
@@ -118,12 +122,19 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     bundle = bundle_for_module(args.module)
-    typescript = emit_typescript(bundle)
+
+    if args.bundle_out:
+        # sort_keys for a stable artifact: git-friendly and so the compat gate
+        # never false-positives on ordering.
+        Path(args.bundle_out).write_text(
+            json.dumps(bundle, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     if args.output:
-        Path(args.output).write_text(typescript, encoding="utf-8")
-    else:
-        sys.stdout.write(typescript)
+        Path(args.output).write_text(emit_typescript(bundle), encoding="utf-8")
+    elif not args.bundle_out:
+        sys.stdout.write(emit_typescript(bundle))
     return 0
 
 
