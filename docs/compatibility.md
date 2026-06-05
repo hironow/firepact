@@ -96,6 +96,7 @@ drift. The signature is structural:
 | numeric enum member change | BREAKING | numeric enums stay strict |
 | model (def) add | SAFE | additive |
 | model (def) remove | BREAKING | contract gone (conservative even if unreferenced) |
+| definition kind change (object <-> enum/scalar) | BREAKING | a def flipping between an object and an enum/scalar is a structural break |
 | `x-firestore-doc-id-field` / `x-firestore-collection` change | BREAKING | changes the injected id / subscription path |
 | union branch reorder | SAFE | a union is a set |
 
