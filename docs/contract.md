@@ -24,6 +24,11 @@ Stamped from Python via `Annotated[...]` metadata (`FirestoreRef`,
 custom `FirestoreJsonSchema` (datetime -> timestamp, bytes -> bytes). `int`/
 `float` are not stamped (JSON Schema already distinguishes `integer`/`number`).
 
+`x-firestore-presence-since` is currently **informational/reserved**: it is
+stamped by `FirestoreBackfilled(since_version=...)` but not yet consumed by the
+emitter or gate (presence is driven by `x-firestore-presence-guaranteed`). It is
+reserved for a future version-aware presence rule.
+
 ## Wire-type mapping
 
 | Python (Pydantic) | Firestore | TS (`firebase/firestore`) |
