@@ -1,9 +1,9 @@
 gitignore: true
-# docs/DESIGN.md / docs/HANDOFF.md are original seed documents (historical
+# docs/design.md / docs/handoff.md are original seed documents (historical
 # context) kept verbatim; everything else is linted.
 ignores:
-  - docs/DESIGN.md
-  - docs/HANDOFF.md
+  - docs/design.md
+  - docs/handoff.md
   - node_modules/**
   - .venv/**
   - target/**

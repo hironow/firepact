@@ -1,7 +1,7 @@
 # Architecture
 
 The current implementation. For *why* each choice was made, see
-[`adr/`](adr/); for the original design seed, see [`DESIGN.md`](DESIGN.md).
+[`adr/`](adr/); for the original design seed, see [`design.md`](design.md).
 
 ## Two components
 
