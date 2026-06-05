@@ -25,5 +25,8 @@ node_modules/
 # E2E generated artifact (produced by the test run)
 tests/e2e/frontend/generated.ts
 
+# Generated artifacts
+output/
+
 # OS / editor
 .DS_Store

@@ -59,6 +59,14 @@ example: build-ext
 test-e2e: build build-ext
     uv run --group e2e pytest tests/e2e -v
 
+# --- Compatibility gate (FULL_TRANSITIVE) ---
+
+# Diff the example's current contract bundle against the committed schemas/ history
+compat: build build-ext
+    mkdir -p output
+    uv run firepact-gen --module examples.chat.models --bundle-out output/message.bundle.json
+    ./target/debug/firepact compat --history schemas --new output/message.bundle.json
+
 # --- Aggregate (Node/e2e recipes are wired in as those layers land) ---
 
 # Run all fast tests

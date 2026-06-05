@@ -82,6 +82,21 @@ jobs:
           bun install
           bunx tsc --noEmit
 
+  compat:
+    name: Compatibility gate (FULL_TRANSITIVE)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - uses: extractions/setup-just@v3
+      - run: uv sync
+      - name: Gate the example contract against schemas/ history
+        run: just compat
+
   semgrep:
     name: Semgrep (project rules)
     runs-on: ubuntu-latest
