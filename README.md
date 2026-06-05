@@ -6,7 +6,7 @@ mode** documents read in realtime via `onSnapshot`, and mechanically guards the
 backward/forward compatibility of that contract over time.
 
 This is the Firestore-specialised, from-scratch successor to
-`pydantic-to-typescript`. It is not merely a type converter: its centre of
+[pydantic-to-typescript](https://github.com/hironow/pydantic-to-typescript). It is not merely a type converter: its centre of
 gravity is a **type contract for a schema-less database plus a compatibility
 gate**.
 
@@ -51,7 +51,8 @@ firepact-compat --history schemas --new schemas/v1.json   # gate compatibility
 
 # as a contributor
 just build   # Rust core + `firepact` binary
-just test    # all tests        just lint   # rust + python + markdown checks
+just test    # all tests
+just lint    # rust + python + markdown checks
 just compat  # gate the example contract against schemas/
 ```
 
