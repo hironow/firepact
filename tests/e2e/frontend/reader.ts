@@ -15,8 +15,13 @@ import {
 import { type Message, messageConverter } from "./generated";
 
 const projectId = process.env.GCLOUD_PROJECT ?? "demo-firepact";
-const host = process.env.FIRESTORE_EMULATOR_HOST_NAME ?? "127.0.0.1";
-const port = Number(process.env.FIRESTORE_EMULATOR_PORT ?? "8080");
+// Parse the standard Firebase env var `FIRESTORE_EMULATOR_HOST` (host:port),
+// which the test harness sets; fall back to the well-known local default.
+const [emuHost, emuPort] = (
+  process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8080"
+).split(":");
+const host = emuHost || "127.0.0.1";
+const port = Number(emuPort ?? "8080");
 const path = process.env.E2E_DOC_PATH ?? "rooms/r1/messages/m1";
 
 const app = initializeApp({ projectId });

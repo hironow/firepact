@@ -102,7 +102,11 @@ def test_generated_types_compile(generated_ts: Path) -> None:
 
 def test_onsnapshot_reads_written_doc(generated_ts: Path, written_doc: None) -> None:
     # given a doc written through the emulator
-    env = {**os.environ, "GCLOUD_PROJECT": PROJECT}
+    env = {
+        **os.environ,
+        "GCLOUD_PROJECT": PROJECT,
+        "FIRESTORE_EMULATOR_HOST": f"{EMULATOR_HOST}:{EMULATOR_PORT}",
+    }
 
     # when the frontend subscribes via onSnapshot through the generated converter
     result = subprocess.run(
