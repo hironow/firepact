@@ -31,5 +31,6 @@ output/
 # Local-only notes (publish runbooks, credentials context)
 private/
 
-# OS / editor
+# OS / editor / local session state
 .DS_Store
+.claude/
