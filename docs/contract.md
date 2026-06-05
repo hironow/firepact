@@ -53,6 +53,7 @@ lack a field). Per field:
 | plain `datetime` (non-server) | `Timestamp` | `Timestamp \| Date` |
 | `DocumentReference` | `DocumentReference<T>` | `DocumentReference<T>` |
 | document id field | `string` (converter injects `snapshot.id`) | excluded |
+| readOnly (`@computed_field`) | included (derived value) | excluded (not writable) |
 | `bytes` | `Uint8Array` | `Uint8Array` |
 
 - Optionality (`?`) is orthogonal to value nullability (`| null`).
