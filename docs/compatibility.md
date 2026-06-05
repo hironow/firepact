@@ -54,19 +54,17 @@ enum member changes).
     before v1        :  NOT covered  -->  rescue per-field via FirestoreBackfilled
 ```
 
-Legend / 凡例:
+Legend:
 
-- BUILD TIME: ビルド時
-- single source of truth: 唯一の正本（1 release = 1 bundle: 1リリース1バンドル）
-- emit: read/write/update の TS 型 + Converter + パスヘルパを射影
-- compat: 互換ゲート（bundle を過去版と diff）
-- CI gate: CI ゲート（BREAKING で失敗、SAFE で bundle を history に commit）
-- FORWARD: 前方互換（旧リーダー × 新データ）
-- BACKWARD: 後方互換（新リーダー × 旧データ）
-- FULL: 両方向が成立すること
-- TRANSITIVE: 直前版だけでなく全過去版に対して成立すること
-- guaranteed window: 保証範囲（最初に commit した bundle 以降）
-- FirestoreBackfilled: 最初の bundle より前の doc を個別フィールド単位で救済するアノテーション
+- single source of truth: one bundle per release; `emit` and `compat` both read it
+- emit: projects the read/write/update TS types + Converter + path helpers
+- compat: the gate -- diffs the bundle against every committed past version
+- FORWARD: old reader x new data
+- BACKWARD: new reader x old data
+- FULL = both directions must hold
+- TRANSITIVE = holds against every past version, not just the previous one
+- guaranteed window: from the first committed bundle onward
+- FirestoreBackfilled: rescues pre-baseline documents field by field
 
 ## What it compares
 
