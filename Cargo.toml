@@ -5,6 +5,8 @@ edition = "2021"
 
 [lib]
 name = "firepact_core"
+# rlib for the `firepact` binary; cdylib for the PyO3 extension module.
+crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "firepact"
@@ -12,3 +14,9 @@ path = "src/main.rs"
 
 [dependencies]
 serde_json = "1.0"
+# Optional: only compiled for the Python extension build (maturin --features python).
+# The `firepact` binary builds without it, staying Python-free (DESIGN S9).
+pyo3 = { version = "0.25", features = ["extension-module"], optional = true }
+
+[features]
+python = ["dep:pyo3"]

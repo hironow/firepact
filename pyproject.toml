@@ -27,14 +27,17 @@ e2e = [
     "google-cloud-firestore>=2.16",
 ]
 
-# Phase 0c uses a pure-Python wheel (subprocess to the cargo-built `firepact`
-# binary). Phase 0e swaps this build backend for maturin (PyO3-native emit).
+# maturin builds the PyO3 extension (firepact._core) alongside the pure-Python
+# layer under python/. The Python code falls back to the `firepact` subprocess
+# when the native module is absent (e.g. a non-maturin dev checkout).
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
 
-[tool.hatch.build.targets.wheel]
-packages = ["python/firepact"]
+[tool.maturin]
+python-source = "python"
+module-name = "firepact._core"
+features = ["python"]
 
 [tool.ruff.lint]
 # see: https://docs.astral.sh/ruff/rules/
@@ -67,6 +70,11 @@ strict = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 files = ["python", "examples", "tests"]
+
+# google-cloud-firestore is an e2e-only dependency (not in the default env).
+[[tool.mypy.overrides]]
+module = ["google.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 # E2E (tests/e2e) is excluded from the default run -- it needs the emulator and

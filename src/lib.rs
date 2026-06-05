@@ -382,3 +382,25 @@ fn ident(key: &str) -> String {
         format!("\"{}\"", key.replace('"', "\\\""))
     }
 }
+
+/// PyO3 bindings (compiled only for the maturin extension build). Lets the
+/// Python layer call the emitter natively instead of shelling out to the binary.
+#[cfg(feature = "python")]
+mod python {
+    use pyo3::exceptions::PyValueError;
+    use pyo3::prelude::*;
+
+    /// Emit read/write TypeScript from a contract bundle given as a JSON string.
+    #[pyfunction]
+    fn emit(bundle_json: &str) -> PyResult<String> {
+        let bundle: serde_json::Value =
+            serde_json::from_str(bundle_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(crate::emit(&bundle))
+    }
+
+    #[pymodule]
+    fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
+        m.add_function(wrap_pyfunction!(emit, m)?)?;
+        Ok(())
+    }
+}

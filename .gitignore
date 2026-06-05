@@ -8,6 +8,9 @@ __pycache__/
 .venv/
 .uv/
 *.egg-info/
+# maturin-built native extension (placed in-tree by uv sync / maturin develop)
+python/firepact/_core*.so
+python/firepact/*.pyd
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/

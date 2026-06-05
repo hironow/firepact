@@ -7,6 +7,7 @@ the compatibility gate.
 
 from __future__ import annotations
 
+from firepact.cli import generate_typescript_defs
 from firepact.firestore_schema import (
     FirestoreBackfilled,
     FirestoreGeoPoint,
@@ -33,5 +34,6 @@ __all__ = [
     "__version__",
     "build_realtime_bundle",
     "firestore_realtime",
+    "generate_typescript_defs",
     "registered_roots",
 ]
