@@ -42,9 +42,8 @@ for a schema-less DB plus a compatibility gate -- not merely a type converter.
 - Backend write convention: `by_alias=True` + `alias_generator=to_camel`
   (camelCase). The extractor MUST match it exactly (trap #1).
 
-## Open Questions
-- [ ] OpenTelemetry: proposed exclusion for a build-time codegen CLI (not a
-      service). Needs requester confirmation (deviation from the global standard).
-- [ ] Name reservation (PyPI `firepact`, crates.io `firepact-core`, GitHub):
-      outward-facing, needs requester credentials; prepare metadata now, publish
-      at the requester's hand near release.
+## Open Questions (resolved)
+- [x] OpenTelemetry: excluded for a build-time codegen CLI (requester-confirmed);
+      see ADR 0006.
+- [x] Name reservation: metadata is publish-ready (crates.io + PyPI); the actual
+      publish/reserve is left to the owner's credentials near release.

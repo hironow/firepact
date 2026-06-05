@@ -1,69 +1,73 @@
 # Handover
 
 **Last updated:** 2026-06-05 (JST)
-**Updated by:** claude (Phase 0 session)
+**Updated by:** claude
 
 ## Current State
 
-Phase 0 is functionally complete and **shippable**: the full chain works and is
-proven by a real-emulator E2E.
+All phases (0 -> 1 -> 3 -> 2) are implemented and green.
 
-- Rust core (`firepact-core`, bin `firepact`): `emit` projects the contract
-  bundle into read/write TypeScript; `compat` is a stub (Phase 1). CLI takes
-  subcommands and reads the bundle from a file or stdin.
-- Emitter features landed: wire-type mapping, read/write projection, **open
-  string enums** in the read view (pulled forward; the compat gate's premise),
-  and a **minimal doc-id converter** for realtime roots (so `id: string` holds).
-- Python extractor (`python/firepact`): imports `@firestore_realtime` roots,
-  delegates schema generation to Pydantic, stamps `x-firestore-*`, injects root
-  collection + doc-id. `by_alias=True` pinned by a guard test.
-- E2E (`tests/e2e`): backend write -> generate -> `tsc --noEmit` -> `onSnapshot`
-  read through the generated converter. Both checks pass.
+- **Phase 0 (shippable)**: Rust emitter (wire types, read/write/update projection,
+  open string enums, doc-id converter, typed path helpers); Python extractor
+  (Pydantic-delegated bundle, `x-firestore-*`, `by_alias=True` guard); maturin/
+  PyO3 wheel with native `emit` + console scripts + `generate_typescript_defs`;
+  real-emulator E2E (write -> generate -> `tsc` -> `onSnapshot` read).
+- **Phase 1**: `firepact compat` FULL_TRANSITIVE gate. The HANDOFF S5.2 taxonomy
+  is a passing test table; two CLI forms (pairwise and `--history`). ADR 0004.
+- **Phase 3**: CI (rust + python 3.11-3.13 + pydantic drift matrix + tsc) and
+  Renovate. The 2-layer "snapshot" is the committed golden pair (schema-layer
+  `message.bundle.json` + emit-layer `message.generated.ts`), compared in tests.
+- **Phase 2**: tuples (prefixItems), discriminated unions (oneOf), update view
+  (`Partial<Write>`), typed path helpers.
+- Cross-cutting: ADRs 0001-0007, `.semgrep/` skeleton, publish-ready metadata.
 
-All commits are Conventional Commits with structural/behavioral separated.
-`just test` (rust + python unit/integration) and `just lint` are green; `just
-test-e2e` passes against the running emulator.
+`just test` (rust + python) and `just lint` are green; `just test-e2e` passes
+against the running emulator. All commits are Conventional Commits with
+structural/behavioral separated.
 
 ## In Progress
 
-Phase 0d done. **Checkpoint for requester review** (as requested: review once the
-Phase 0 E2E passes). Next: Phase 0e (maturin/PyO3 packaging).
+Nothing. Awaiting requester review / publish decision.
 
 ## Next Actions
 
-1. Requester review of Phase 0.
-2. Resolve the two open questions in `docs/intent.md` (OTel exclusion; name
-   reservation timing).
-3. Phase 0e: maturin/PyO3 (swap subprocess for native `emit`/`compat`,
-   `from firepact import generate_typescript_defs`, console scripts).
-4. Phase 1: `firepact compat` (HANDOFF S5.2 taxonomy as a test table; ADR 0004
-   with the required Enforcement inventory).
-5. Phase 3 then Phase 2.
+1. Owner: reserve names and publish when ready (crates.io `firepact-core`, PyPI
+   `firepact`, GitHub) -- metadata is complete; this needs the owner's credentials
+   and is an outward-facing action (not done automatically).
+2. Optionally: start committing released bundles under `schemas/v*.json` and wire
+   `firepact compat --history schemas --new <new>` into CI to begin enforcing the
+   gate against real history.
+3. Grow `.semgrep/rules/` as patterns recur (candidates listed in its README).
 
 ## Known Risks / Blockers
 
-- `python/firepact/cli.py` uses `importlib.import_module(<module-arg>)` -- the
-  intended `--module` mechanism (same as the prior tool; developer build-time
-  input, validated to a dotted path). The global semgrep guardrail flags it as a
-  false positive; inline `# nosemgrep` is not honored by that managed scanner.
-  Accepted and documented; the tested core API has no dynamic import.
-- Python pinned to 3.13 for dependency wheels (google-cloud-firestore, etc.).
+- Native extension staleness: `uv sync` skips rebuilding the in-tree PyO3 module
+  on same-version Rust edits; `just build-ext` (and `just test-py`/`test-e2e`)
+  force `uv sync --reinstall-package firepact`. Run it after changing Rust.
+- `python/firepact/cli.py` `importlib.import_module(--module)` is flagged by the
+  global semgrep guardrail (false positive: developer build-time input, validated
+  to a dotted path, same as the prior tool). Accepted; the tested core API has no
+  dynamic import. The managed scanner does not honor inline `# nosemgrep`.
+- Python pinned to 3.13 locally for dependency wheels.
+- `insta` was not adopted: the 2-layer freeze is realized as committed golden
+  artifacts (deterministic, real files consumers use), avoiding duplicate
+  assertions. Revisit if a richer snapshot-review workflow is wanted.
+- E2E is local-only (needs the emulator + bun); CI does the static `tsc` check.
 
 ## Context the Next Actor Needs
 
 - Emulator: `127.0.0.1:8080`, project `demo-firepact`, `singleProjectMode`
-  (from `~/dotfiles/emulator`, assumed running).
-- The fixture pair under `fixtures/` is the canonical contract artifact: schema
-  layer (`message.bundle.json`, frozen Pydantic output) and emit layer
-  (`message.generated.ts`). Golden tests compare both.
-- The read-view projection logic will be shared with the compat gate; extract it
-  to avoid drift (planned `contract.rs`).
+  (`~/dotfiles/emulator`, assumed running).
+- `fixtures/` is the canonical contract artifact (schema + emit layers).
+- read-view projection is shared by emit and compat (`read_optional`,
+  `read_type_signature` in `src/lib.rs`) so the gate never drifts.
 
 ## Relevant Files and Commands
 
-- `src/lib.rs` - emitter (emit, projection, open enum, converter).
-- `src/main.rs` - CLI (emit/compat, stdin).
-- `python/firepact/firestore_schema.py` / `firestore_select.py` - extractor.
-- `examples/chat/models.py` - canonical example models.
-- `fixtures/` - golden contract artifacts.
-- `just test` / `just lint` / `just test-e2e` - verify.
+- `src/lib.rs` - emitter + shared projection + PyO3 binding; `src/compat.rs` - gate.
+- `src/main.rs` - CLI (`emit`, `compat`).
+- `python/firepact/` - extractor; `examples/chat/models.py` - example models.
+- `tests/` - golden, cli, open_enum, converter, compat, emit_phase2 (rust);
+  unit/integration/e2e (python).
+- `docs/adr/0001-0007` - the "why".
+- `just test` / `just lint` / `just test-e2e` / `just build-ext`.
