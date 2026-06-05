@@ -12,6 +12,62 @@ preserves the read contract **forward** (old reader x new data) and **backward**
 safe evolution is additive read-optional fields (plus additive models and string
 enum member changes).
 
+## At a glance
+
+```text
+[1] BUILD TIME -- firepact fixes the wire shape; CI guards it
+
+    Pydantic models (backend)
+        |
+        |  @firestore_realtime  +  x-firestore-* stamp
+        v
+    enriched JSON Schema bundle      (single source of truth; 1 release = 1 bundle)
+        |
+        +-----------------------+
+        |                       |
+        v                       v
+    [ emit ]                [ compat ]  -->  CI gate: FULL_TRANSITIVE
+        |                       |              SAFE vs every past bundle?
+        v                       |                BREAKING -> CI fails
+    read / write / update       |                SAFE     -> commit bundle to history
+    TS + Converter + paths      |
+        |
+        |  (the types the frontend imports == the document contract)
+        v
+    TypeScript frontend
+```
+
+`FULL_TRANSITIVE` is the whole point, so it is worth stating its meaning exactly:
+
+```text
+[2] FULL_TRANSITIVE -- what a SAFE verdict actually promises
+
+    contract versions:   v1 ---- v2 ---- v3 ---- v4 (new)
+
+      new frontend (v4)  --reads-->  old document (v1..v3)    [ BACKWARD ]
+      old frontend (v1)  --reads-->  new document (v4)        [ FORWARD  ]
+
+    FULL        = BOTH directions must hold (forward AND backward)
+    TRANSITIVE  = against EVERY past version v1..v3, not just the previous v3
+
+    guaranteed window:  [ v1 = first committed bundle ] =====> forward, forever
+    before v1        :  NOT covered  -->  rescue per-field via FirestoreBackfilled
+```
+
+Legend / 凡例:
+
+- BUILD TIME: ビルド時
+- single source of truth: 唯一の正本（1 release = 1 bundle: 1リリース1バンドル）
+- emit: read/write/update の TS 型 + Converter + パスヘルパを射影
+- compat: 互換ゲート（bundle を過去版と diff）
+- CI gate: CI ゲート（BREAKING で失敗、SAFE で bundle を history に commit）
+- FORWARD: 前方互換（旧リーダー × 新データ）
+- BACKWARD: 後方互換（新リーダー × 旧データ）
+- FULL: 両方向が成立すること
+- TRANSITIVE: 直前版だけでなく全過去版に対して成立すること
+- guaranteed window: 保証範囲（最初に commit した bundle 以降）
+- FirestoreBackfilled: 最初の bundle より前の doc を個別フィールド単位で救済するアノテーション
+
 ## What it compares
 
 The pre-projection bundle `$defs`. Because projection is deterministic, bundle
