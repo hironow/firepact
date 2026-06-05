@@ -2,7 +2,24 @@
 
 The worked reference for the real **layered** firepact setup: Firestore documents
 and plain HTTP DTOs, generated into separate files with each shared enum defined
-exactly once.
+exactly once. This one uses the decorator-on-model style; see
+[`../realtime_app/`](../realtime_app/) for the production style (firepact kept out
+of the model source, snake_case wire).
+
+## `datetime` is not one TypeScript type
+
+A Pydantic `datetime` maps to a different TS type depending on where the value
+lives. This example shows all three:
+
+| Field | Annotation | read view | write view |
+|---|---|---|---|
+| `Message.createdAt` | `datetime` + `FirestoreServerTimestamp()` | `Timestamp \| null` | `FieldValue` (`serverTimestamp()`) |
+| `Message.editedAt` | plain `datetime` (Firestore field) | `Timestamp` | `Timestamp \| Date` |
+| `SendMessageRequest.clientTime` | plain `datetime` (HTTP DTO, `--plain`) | `string` | `string` |
+
+So on a Firestore read you get a real `Timestamp` (`data.editedAt.toDate()`),
+while an HTTP payload gives you a `string` (`new Date(clientTime)`) -- the two are
+never confused because they are different generated types.
 
 ## Inputs (Pydantic)
 

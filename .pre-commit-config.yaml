@@ -16,6 +16,8 @@ exclude: |
     fixtures/|
     examples/chat/generated\.ts|
     examples/chat/dtos\.ts|
+    examples/realtime_app/firestore\.ts|
+    examples/realtime_app/dtos\.ts|
     tests/e2e/frontend/generated\.ts|
     docs/firestore-support\.md
   )

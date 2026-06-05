@@ -68,8 +68,13 @@ class Message(CamelModel):
     author: Annotated[str, FirestoreRef("Profile")]
     author_profile: Profile
     body: Annotated[str, FirestoreBackfilled(since_version="v1")]  # -> presence-since
+    # SERVER timestamp: the write view is `FieldValue` (you pass
+    # `serverTimestamp()`), and the read view is `Timestamp | null` (null for the
+    # brief moment before the server fills it in). Never an ISO string.
     created_at: Annotated[datetime, FirestoreServerTimestamp()]
-    edited_at: datetime  # plain (non-server) datetime -> Timestamp / Timestamp | Date
+    # PLAIN (non-server) datetime in a Firestore doc -> read `Timestamp`, write
+    # `Timestamp | Date`. Compare dtos.py, where a datetime over HTTP is `string`.
+    edited_at: datetime
     embedding: Annotated[list[float], FirestoreVector()]  # -> VectorValue
     kind: MessageKind
     location: Annotated[tuple[float, float], FirestoreGeoPoint()]  # -> GeoPoint
