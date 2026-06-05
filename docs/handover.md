@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-06-05 (JST)
+**Last updated:** 2026-06-06 (JST)
 **Updated by:** claude
 
 ## Current State
@@ -29,7 +29,7 @@ All phases (0 -> 1 -> 3 -> 2) are implemented and green.
   discriminated union. `tests/firestore_field_types.rs` is a forget-guard
   manifest: a new field type cannot ship without emit + golden + E2E coverage.
   The e2e reader runtime-asserts every value type against the live emulator.
-- Cross-cutting: ADRs 0001-0008, `.semgrep/` skeleton, publish-ready metadata,
+- Cross-cutting: ADRs 0001-0013, `.semgrep/` skeleton, published metadata,
   `private/PUBLISH_HOWTO.md` (git-ignored local runbook).
 - Runtime E2E has been run green against the live emulator; it caught a real
   wire-type bug (`bytes` -> `Bytes`, not `Uint8Array`, for the client SDK; see
@@ -41,20 +41,23 @@ structural/behavioral separated.
 
 ## In Progress
 
-Nothing. Awaiting requester review / publish decision.
+Nothing. **v0.1.7 is published** to PyPI (`firepact`) and crates.io
+(`firepact-core`) via the OIDC trusted-publishing workflow (ADR 0013), with PEP 740
+publish attestations (PyPI) and SLSA build provenance (GitHub) verified.
 
 ## Next Actions
 
-1. Owner: do the one-time release bootstrap, then publish by pushing a `v*` tag.
-   Release is OIDC Trusted Publishing with no long-lived token (ADR 0013,
-   `.github/workflows/release.yaml`). The bootstrap (GitHub `release` environment +
-   `v*` tag ruleset + default-token read-only; PyPI pending publisher; crates.io
-   one-time disposable token then enforce TP) is outward-facing repo/registry setup
-   the owner must do once -- the full step-by-step is `private/PUBLISH_HOWTO.md`.
+1. Future releases: bump `pyproject.toml` + `Cargo.toml` together, commit, then
+   `git tag vX.Y.Z` + push -> CI builds, you approve the `release` environment, and
+   it publishes to both registries tokenlessly. `private/PUBLISH_HOWTO.md` is the
+   runbook. The bootstrap (env + `v*` ruleset + read-only token; PyPI pending
+   publisher; crates.io TP enforcement) is done.
 2. Optionally: start committing released bundles under `schemas/v*.json` and wire
    `firepact compat --history schemas --new <new>` into CI to begin enforcing the
    gate against real history.
 3. Grow `.semgrep/rules/` as patterns recur (candidates listed in its README).
+4. Bump `actions/checkout` to v5 (the v4 SHA runs on Node 20, deprecated; forced to
+   Node 24 from 2026-06-16). Renovate/Dependabot should carry the SHA bumps.
 
 ## Review pass (codex + 3 review agents)
 
@@ -84,6 +87,14 @@ processes.
   artifacts (deterministic, real files consumers use), avoiding duplicate
   assertions. Revisit if a richer snapshot-review workflow is wanted.
 - E2E is local-only (needs the emulator + bun); CI does the static `tsc` check.
+- Release runners: macOS wheels build on `macos-latest` (Apple Silicon); the Intel
+  `macos-13` image was retired 2025-12-04, so x86_64 macOS wheels are cross-compiled
+  on the arm64 runner. If x86_64 mac coverage matters past 2027, revisit (Intel
+  GitHub runners end Fall 2027).
+- Actions allowlist: the repo restricts non-`hironow`/non-GitHub actions to a
+  pinned set (`Settings -> Actions -> General`). `extractions/setup-just` pulls
+  `extractions/setup-crate` transitively, so BOTH must be allowlisted or CI setup
+  fails. Add new third-party actions to the allowlist before using them.
 
 ## Context the Next Actor Needs
 
@@ -101,5 +112,5 @@ processes.
 - `tests/` - golden, cli, open_enum, converter, compat, emit_phase2 (rust);
   unit/integration/e2e (python).
 - `docs/` - live docs of the current system: `architecture.md`, `usage.md`,
-  `contract.md`, `compatibility.md` (the "what"); `docs/adr/0001-0007` - the "why".
+  `contract.md`, `compatibility.md` (the "what"); `docs/adr/0001-0013` - the "why".
 - `just test` / `just lint` / `just test-e2e` / `just build-ext` / `just example-gen`.
