@@ -23,9 +23,12 @@ All phases (0 -> 1 -> 3 -> 2) are implemented and green.
   `firepact-compat` console script (not just the cargo binary). `firepact-gen
   --bundle-out` exports the contract bundle; `schemas/` + `just compat` +
   a CI compat job gate the example contract.
-- Wire-type coverage: reference, server/plain timestamp, bytes, GeoPoint, enum
-  (open), dict, array, tuple, nested model, discriminated union -- all in the
-  example, golden, and (where runtime-relevant) the e2e.
+- Wire-type coverage: ALL Firestore value types -- string, number, boolean,
+  null, map, array, timestamp (server/plain), GeoPoint, bytes (`Bytes`),
+  reference, and Vector (`VectorValue`) -- plus open enum, tuple, nested model,
+  discriminated union. `tests/firestore_field_types.rs` is a forget-guard
+  manifest: a new field type cannot ship without emit + golden + E2E coverage.
+  The e2e reader runtime-asserts every value type against the live emulator.
 - Cross-cutting: ADRs 0001-0008, `.semgrep/` skeleton, publish-ready metadata,
   `private/PUBLISH_HOWTO.md` (git-ignored local runbook).
 - Runtime E2E has been run green against the live emulator; it caught a real
