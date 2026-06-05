@@ -20,7 +20,10 @@ gate**.
   fails CI on breaking schema changes (`FULL_TRANSITIVE`).
 
 See [`DESIGN.md`](DESIGN.md) for the architecture and the `x-firestore-*`
-contract vocabulary, and [`HANDOFF.md`](HANDOFF.md) for status and gotchas.
+contract vocabulary, and [`docs/adr/`](docs/adr/) for the decisions behind it.
+Current status lives in [`docs/handover.md`](docs/handover.md); [`docs/intent.md`](docs/intent.md)
+captures the goal. `DESIGN.md` and `HANDOFF.md` are the original design/handoff
+seed documents (historical context, not the live status).
 
 ## Components
 
