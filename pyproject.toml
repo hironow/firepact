@@ -22,6 +22,10 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
 ]
+# E2E only: the backend writer talks to the real Firestore emulator.
+e2e = [
+    "google-cloud-firestore>=2.16",
+]
 
 # Phase 0c uses a pure-Python wheel (subprocess to the cargo-built `firepact`
 # binary). Phase 0e swaps this build backend for maturin (PyO3-native emit).
@@ -65,5 +69,7 @@ warn_redundant_casts = true
 files = ["python", "examples", "tests"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# E2E (tests/e2e) is excluded from the default run -- it needs the emulator and
+# the `e2e` dependency group; run it explicitly via `just test-e2e`.
+testpaths = ["tests/unit", "tests/integration"]
 pythonpath = ["python", "."]

@@ -45,6 +45,12 @@ lint-py:
 fmt-py:
     uv run ruff format .
 
+# --- End-to-end (real Firestore emulator + onSnapshot) ---
+
+# Run the E2E suite (needs the firestore emulator on 127.0.0.1:8080 and bun)
+test-e2e: build
+    uv run --group e2e pytest tests/e2e -v
+
 # --- Aggregate (Node/e2e recipes are wired in as those layers land) ---
 
 # Run all fast tests
