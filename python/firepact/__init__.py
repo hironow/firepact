@@ -7,6 +7,8 @@ the compatibility gate.
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
+
 from firepact.cli import check_compat, generate_typescript_defs
 from firepact.firestore_schema import (
     FirestoreBackfilled,
@@ -23,7 +25,10 @@ from firepact.firestore_select import (
     registered_roots,
 )
 
-__version__ = "0.1.0"
+try:
+    __version__ = version("firepact")
+except PackageNotFoundError:  # source checkout without an installed build
+    __version__ = "0.0.0+unknown"
 
 __all__ = [
     "FirestoreBackfilled",
