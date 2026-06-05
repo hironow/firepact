@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["generated.ts", "consumer.ts", "reader.ts"]
+}

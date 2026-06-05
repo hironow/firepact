@@ -1,0 +1,13 @@
+{
+  "name": "firepact-e2e-frontend",
+  "private": true,
+  "type": "module",
+  "description": "E2E consumer: compiles against firepact-generated types and reads via onSnapshot.",
+  "dependencies": {
+    "firebase": "^11.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+}
