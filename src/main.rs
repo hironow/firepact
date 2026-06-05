@@ -131,8 +131,16 @@ fn cmd_compat_history(dir: &str, new_path: &str) -> i32 {
             return 1;
         }
     };
+    // If --new lives inside the history dir, don't diff it against itself
+    // (an identity diff is always SAFE and would mask missing history).
+    let new_canon = std::fs::canonicalize(new_path).ok();
     let mut any_breaking = false;
+    let mut compared = 0usize;
     for past in &files {
+        if new_canon.is_some() && std::fs::canonicalize(past).ok() == new_canon {
+            continue;
+        }
+        compared += 1;
         let label = past
             .file_name()
             .and_then(|s| s.to_str())
@@ -152,16 +160,14 @@ fn cmd_compat_history(dir: &str, new_path: &str) -> i32 {
         eprintln!("compat: BREAKING against at least one past version");
         1
     } else {
-        eprintln!(
-            "compat: compatible with all {} past version(s)",
-            files.len()
-        );
+        eprintln!("compat: compatible with all {compared} past version(s)");
         0
     }
 }
 
-/// Value following `name` in the argument list, if present.
+/// Value following `name` in the argument list, if present. A following token
+/// that is itself a flag (`--x`) is treated as a missing value, not the value.
 fn flag(args: &[String], name: &str) -> Option<String> {
     let idx = args.iter().position(|a| a == name)?;
-    args.get(idx + 1).cloned()
+    args.get(idx + 1).filter(|v| !v.starts_with("--")).cloned()
 }

@@ -139,6 +139,106 @@ fn enum_value_remove_is_safe() {
     assert!(!breaking(old, new));
 }
 
+// --- open-enum normalization must be structural, not a substring collapse ---
+
+fn string_enum_field(field: Value) -> Value {
+    json!({ "$defs": {
+        "Kind": { "type": "string", "enum": ["a", "b"] },
+        "Doc": { "type": "object", "properties": { "f": field }, "required": ["f"] }
+    }})
+}
+
+#[test]
+fn array_of_string_enum_retyped_to_scalar_is_breaking() {
+    // (Kind | (string & {}))[]  ->  string  is array->scalar, not a no-op.
+    let old = string_enum_field(json!({ "type": "array", "items": { "$ref": "#/$defs/Kind" } }));
+    let new = string_enum_field(json!({ "type": "string" }));
+    assert!(breaking(old, new));
+}
+
+#[test]
+fn array_of_string_enum_member_change_is_safe() {
+    let old = json!({ "$defs": {
+        "Kind": { "type": "string", "enum": ["a", "b"] },
+        "Doc": { "type": "object",
+            "properties": { "f": { "type": "array", "items": { "$ref": "#/$defs/Kind" } } },
+            "required": ["f"] }
+    }});
+    let new = json!({ "$defs": {
+        "Kind": { "type": "string", "enum": ["a", "b", "c"] },
+        "Doc": { "type": "object",
+            "properties": { "f": { "type": "array", "items": { "$ref": "#/$defs/Kind" } } },
+            "required": ["f"] }
+    }});
+    assert!(!breaking(old, new));
+}
+
+#[test]
+fn nullable_string_enum_narrowed_to_non_nullable_is_breaking() {
+    // Kind | null  ->  Kind   drops null (old docs with null break the new front).
+    let old =
+        string_enum_field(json!({ "anyOf": [{ "$ref": "#/$defs/Kind" }, { "type": "null" }] }));
+    let new = string_enum_field(json!({ "$ref": "#/$defs/Kind" }));
+    assert!(breaking(old, new));
+}
+
+#[test]
+fn optional_string_enum_to_optional_string_is_safe() {
+    // Both accept any string-or-null; no false-positive break.
+    let old =
+        string_enum_field(json!({ "anyOf": [{ "$ref": "#/$defs/Kind" }, { "type": "null" }] }));
+    let new = json!({ "$defs": {
+        "Kind": { "type": "string", "enum": ["a", "b"] },
+        "Doc": { "type": "object",
+            "properties": { "f": { "anyOf": [{ "type": "string" }, { "type": "null" }] } },
+            "required": ["f"] }
+    }});
+    assert!(!breaking(old, new));
+}
+
+fn numeric_enum_doc(members: Value) -> Value {
+    json!({ "$defs": {
+        "Level": { "type": "integer", "enum": members },
+        "Doc": { "type": "object",
+            "properties": { "level": { "$ref": "#/$defs/Level" } },
+            "required": ["level"] }
+    }})
+}
+
+#[test]
+fn numeric_enum_member_change_is_breaking() {
+    // Numeric enums stay strict (no open idiom), so member changes break.
+    let old = numeric_enum_doc(json!([1, 2]));
+    let new = numeric_enum_doc(json!([1, 2, 3]));
+    assert!(breaking(old, new));
+}
+
+// --- realtime-root metadata that changes the read contract ---
+
+fn root_doc(doc_id: &str, collection: &str) -> Value {
+    json!({ "$defs": { "Message": {
+        "type": "object",
+        "x-firestore-collection": collection,
+        "x-firestore-doc-id-field": doc_id,
+        "properties": { "id": { "type": "string" }, "body": { "type": "string" } },
+        "required": ["id", "body"]
+    }}})
+}
+
+#[test]
+fn doc_id_field_change_is_breaking() {
+    let old = root_doc("id", "rooms/{roomId}/messages");
+    let new = root_doc("docId", "rooms/{roomId}/messages");
+    assert!(breaking(old, new));
+}
+
+#[test]
+fn collection_path_change_is_breaking() {
+    let old = root_doc("id", "rooms/{roomId}/messages");
+    let new = root_doc("id", "channels/{roomId}/messages");
+    assert!(breaking(old, new));
+}
+
 #[test]
 fn model_add_is_safe() {
     let old = doc(json!({ "a": { "type": "string" } }), json!(["a"]));

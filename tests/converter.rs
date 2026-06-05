@@ -27,6 +27,11 @@ fn root_gets_a_converter_that_injects_doc_id() {
         "converter decl:\n{ts}"
     );
     assert!(ts.contains("id: snapshot.id"), "doc-id injection:\n{ts}");
+    // toFirestore must strip the doc-id so it is never persisted as a field.
+    assert!(
+        ts.contains("const { id: _id, ...rest } = model;"),
+        "doc-id stripped on write:\n{ts}"
+    );
     assert!(
         ts.contains("FirestoreDataConverter"),
         "import symbol used:\n{ts}"

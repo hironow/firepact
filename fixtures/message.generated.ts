@@ -52,7 +52,10 @@ export interface ReactionWrite {
 }
 
 export const messageConverter: FirestoreDataConverter<Message> = {
-  toFirestore: (model) => model,
+  toFirestore: (model) => {
+    const { id: _id, ...rest } = model;
+    return rest;
+  },
   fromFirestore: (snapshot, options) => {
     const data = snapshot.data(options) as Omit<Message, "id">;
     return { ...data, id: snapshot.id };

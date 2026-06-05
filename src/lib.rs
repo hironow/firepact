@@ -16,6 +16,10 @@ struct Ctx<'a> {
     defs: &'a Map<String, Value>,
     /// firebase/firestore symbols actually used (for the import line).
     used: BTreeSet<&'static str>,
+    /// When set, render a structural *compat signature* instead of emit output:
+    /// string enums collapse to `string` (open unions accept any string), and
+    /// numeric enums inline their members (member changes must stay visible).
+    compat: bool,
 }
 
 /// Entry point. `bundle` is the object returned by models_json_schema (has "$defs").
@@ -29,6 +33,7 @@ pub fn emit(bundle: &Value) -> String {
     let mut ctx = Ctx {
         defs,
         used: BTreeSet::new(),
+        compat: false,
     };
 
     let mut body = String::new();
@@ -141,26 +146,34 @@ impl<'a> Ctx<'a> {
         format!("{head}export interface {ty_name} {{\n{lines}}}\n\n")
     }
 
-    /// A minimal converter for a realtime root: round-trips the write payload and
-    /// injects the document id on read (so the read view's `id: string` holds).
-    /// The richer converter (typed path helpers) is layered on in Phase 2.
+    /// A read-oriented converter for a realtime root: it injects the document id
+    /// on read (so the read view's `id: string` holds) and strips that id field
+    /// on write so it is never persisted into document data (the doc-id is the
+    /// path, not a field). Write payloads should use the `{name}Write` type
+    /// directly; this converter is a single read app-type because a read value
+    /// (e.g. `Timestamp | null`) is not a write value (`FieldValue`).
     fn render_converter(&mut self, name: &str, node: &Value) -> String {
         self.used.insert("FirestoreDataConverter");
         let const_name = lower_first(name);
         let read = name;
-        // A single app-type converter (the read view). Read/write asymmetry is
-        // expressed by the separate `{name}Write` type used for write payloads;
-        // forcing it as the converter's DbModelType cannot type-check because a
-        // read value (e.g. `Timestamp | null`) is not a write value (`FieldValue`).
-        let from_body = match node.get("x-firestore-doc-id-field").and_then(Value::as_str) {
-            Some(doc_id) => format!(
-                "    const data = snapshot.data(options) as Omit<{read}, \"{doc_id}\">;\n    return {{ ...data, {doc_id}: snapshot.id }};\n",
-            ),
-            None => format!("    return snapshot.data(options) as {read};\n"),
-        };
+        let (to_body, from_body) =
+            match node.get("x-firestore-doc-id-field").and_then(Value::as_str) {
+                Some(doc_id) => (
+                    format!("    const {{ {doc_id}: _id, ...rest }} = model;\n    return rest;\n"),
+                    format!(
+                        "    const data = snapshot.data(options) as Omit<{read}, \"{doc_id}\">;\n    return {{ ...data, {doc_id}: snapshot.id }};\n",
+                    ),
+                ),
+                None => (
+                    "    return model;\n".to_string(),
+                    format!("    return snapshot.data(options) as {read};\n"),
+                ),
+            };
         format!(
             "export const {const_name}Converter: FirestoreDataConverter<{read}> = {{\n\
-             \x20 toFirestore: (model) => model,\n\
+             \x20 toFirestore: (model) => {{\n\
+             {to_body}\
+             \x20 }},\n\
              \x20 fromFirestore: (snapshot, options) => {{\n\
              {from_body}\
              \x20 }},\n\
@@ -193,8 +206,17 @@ impl<'a> Ctx<'a> {
         }
         // 4) inline enum. String enums read as an open union (trap #5).
         if let Some(arr) = node.get("enum").and_then(Value::as_array) {
+            let all_string = arr.iter().all(Value::is_string);
+            // Compat signature: a string enum is read-equivalent to `string`;
+            // numeric enums inline their members so member changes are visible.
+            if self.compat {
+                if all_string {
+                    return "string".to_string();
+                }
+                return arr.iter().map(literal).collect::<Vec<_>>().join(" | ");
+            }
             let strict = arr.iter().map(literal).collect::<Vec<_>>().join(" | ");
-            if view == View::Read && arr.iter().all(Value::is_string) {
+            if view == View::Read && all_string {
                 return format!("{strict}{OPEN_ENUM_SUFFIX}");
             }
             return strict;
@@ -276,6 +298,17 @@ impl<'a> Ctx<'a> {
             // Openness (trap #5) is applied at the read reference site only,
             // and only for string enums (no clean open idiom for numbers).
             let string_enum = def.map(is_string_enum_node).unwrap_or(false);
+            if self.compat {
+                // Compat signature: string enum -> `string`; numeric enum inlines
+                // its members so member changes surface as a signature change.
+                if string_enum {
+                    return "string".to_string();
+                }
+                if let Some(arr) = def.and_then(|d| d.get("enum")).and_then(Value::as_array) {
+                    return arr.iter().map(literal).collect::<Vec<_>>().join(" | ");
+                }
+                return name.to_string();
+            }
             if view == View::Read && string_enum {
                 format!("{name}{OPEN_ENUM_SUFFIX}")
             } else {
@@ -345,12 +378,15 @@ pub fn read_optional(prop: &Value, required: &BTreeSet<&str>, key: &str) -> bool
     !(required.contains(key) && guaranteed)
 }
 
-/// The read-view TypeScript type of a single field, used as the compat signature.
-/// `defs` is the bundle's `$defs` (needed to resolve `$ref` enum string-ness).
+/// The structural read-view signature of a single field, used by the compat gate.
+/// `defs` is the bundle's `$defs` (needed to resolve `$ref` enums). String enums
+/// collapse to `string` (open unions are read-equivalent to `string`), so the
+/// surrounding structure (arrays, null branches) is what the gate compares.
 pub fn read_type_signature(defs: &Map<String, Value>, prop: &Value) -> String {
     let mut ctx = Ctx {
         defs,
         used: BTreeSet::new(),
+        compat: true,
     };
     ctx.render_type(prop, View::Read)
 }

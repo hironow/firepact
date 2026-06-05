@@ -132,6 +132,26 @@ fn diff_def<'a>(
         return;
     }
 
+    // Realtime-root metadata changes the read contract even though it is not a
+    // field type: the doc-id field is injected by the converter, and the
+    // collection path is where clients subscribe. Either change is BREAKING.
+    for key in ["x-firestore-doc-id-field", "x-firestore-collection"] {
+        let old_v = old_node.get(key).and_then(Value::as_str);
+        let new_v = new_node.get(key).and_then(Value::as_str);
+        if old_v != new_v {
+            findings.push(Finding {
+                def: name.to_string(),
+                field: None,
+                verdict: Verdict::Breaking,
+                message: format!(
+                    "{key} changed: {} -> {}",
+                    old_v.unwrap_or("(none)"),
+                    new_v.unwrap_or("(none)")
+                ),
+            });
+        }
+    }
+
     let empty = Map::new();
     let old_props = old_node
         .get("properties")
@@ -197,16 +217,13 @@ fn field_finding(def: &str, field: &str, verdict: Verdict, message: &str) -> Fin
     }
 }
 
-/// The compat signature of a field's read type. An open string union accepts any
-/// string, so it is normalized to `string`; this makes enum member/kind changes
-/// (and enum<->string) neutral, exactly as the open-enum projection intends.
+/// The compat signature of a field's read type. `read_type_signature` already
+/// renders string enums structurally as `string` (open unions are read-equivalent
+/// to `string`) while keeping arrays, null branches, and numeric-enum members
+/// intact -- so member/kind changes that matter stay visible and array/nullable
+/// retypes are not masked.
 fn signature(defs: &Map<String, Value>, prop: &Value) -> String {
-    let read = read_type_signature(defs, prop);
-    if read.contains("(string & {})") {
-        "string".to_string()
-    } else {
-        read
-    }
+    read_type_signature(defs, prop)
 }
 
 fn required_set(node: &Value) -> BTreeSet<&str> {
