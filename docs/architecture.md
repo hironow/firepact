@@ -23,6 +23,7 @@ inject collection + doc-id on roots
 ```
 
 Legend / 凡例:
+
 - extractor: 抽出器 (Python 層)
 - contract artifact: 契約アーティファクト
 - transitive closure: 推移閉包

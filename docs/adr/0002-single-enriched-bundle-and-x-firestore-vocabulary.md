@@ -32,12 +32,15 @@ base JSON `type` is kept as a fallback; `x-firestore-type` is authoritative.
 ## Consequences
 
 ### Positive
+
 - A small, explicit, validator-safe boundary; no hidden coupling.
 - read/write/update stay consistent because they are projections of one source.
 
 ### Negative
+
 - Developers must annotate types that have no 1:1 Python representation
   (`DocumentReference`, `GeoPoint`, server timestamps) with `Annotated[...]`.
 
 ### Neutral
+
 - The bundle carries Pydantic extras (titles) the emitter ignores.

@@ -26,23 +26,27 @@ for a schema-less DB plus a compatibility gate -- not merely a type converter.
 ## Scope
 
 ### In scope
+
 - All phases in order: 0 (extractor + emit + E2E, shippable), 1 (compat gate),
   3 (CI follow: pydantic matrix + 2-layer insta snapshots + Renovate),
   2 (converter/open-enum/tuple/discriminated-union/update view, by demand).
 
 ### Out of scope (Non-goals)
+
 - A general multi-dialect JSON Schema -> TS compiler (DESIGN S2.2; what killed
   the predecessor).
 - Reimplementing Pydantic introspection in Rust (schema generation is delegated
   to Pydantic).
 
 ## Constraints (confirmed with requester)
+
 - E2E uses the `~/dotfiles/emulator` Firestore emulator, assumed running.
 - Python<->Rust integration: subprocess first, maturin/PyO3 later.
 - Backend write convention: `by_alias=True` + `alias_generator=to_camel`
   (camelCase). The extractor MUST match it exactly (trap #1).
 
 ## Open Questions (resolved)
+
 - [x] OpenTelemetry: excluded for a build-time codegen CLI (requester-confirmed);
       see ADR 0006.
 - [x] Name reservation: metadata is publish-ready (crates.io + PyPI); the actual

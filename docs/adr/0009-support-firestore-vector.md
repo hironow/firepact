@@ -28,15 +28,18 @@ admin SDK reads back as `VectorValue`).
 ## Consequences
 
 ### Positive
+
 - All Firestore field value types are now supported and E2E-verified; the
   type-coverage manifest (forget-guard) has no known gaps.
 - Demonstrates the architecture's extensibility: a new wire type = annotation +
   one emit branch + one manifest row.
 
 ### Negative
+
 - Vector search *queries*/indexes are out of scope (firepact maps the value
   type, not query semantics) — consistent with it being a wire-contract tool.
 
 ### Neutral
+
 - The Python value is a plain `list[float]`; the backend converts to
   `Vector(...)` on write (converter responsibility, as with references).

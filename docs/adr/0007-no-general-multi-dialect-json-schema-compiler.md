@@ -21,11 +21,14 @@ projection are the value, not schema-language generality.
 ## Consequences
 
 ### Positive
+
 - A small, finishable, maintainable tool focused on the real problem.
 
 ### Negative
+
 - Not reusable as a general JSON Schema -> TS converter.
 
 ### Neutral
+
 - If a future Pydantic emits a new 2020-12 construct, handle that specific
   construct -- not a new dialect.

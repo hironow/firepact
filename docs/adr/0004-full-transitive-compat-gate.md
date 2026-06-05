@@ -39,18 +39,21 @@ deterministic, bundle compatibility implies all-view compatibility.
 ## Enforcement inventory
 
 ### Entry points
+
 - Any change to a realtime root's contract bundle (the extractor output for a
   `@firestore_realtime` model and its transitive closure).
 - The single enforcement point is `firepact compat --history <dir> --new <file>`
   run in CI on every bundle change, pairwise against every committed past version.
 
 ### Persistent / carried data needed at each enforcement point
+
 - The versioned bundle history (e.g. `schemas/v*.json`), one file per release.
 - The `x-firestore-*` vocabulary inside each bundle: `presence-guaranteed`
   (drives read-required), `x-firestore-type` (part of the type signature), and
   the enum bodies (open-enum normalization).
 
 ### Bypass candidates ("where can this go wrong?")
+
 - Hand-editing a generated bundle instead of regenerating from Pydantic -> the
   bundle is still the artifact the gate compares, so this is covered as long as
   the edited bundle is what ships.
@@ -64,6 +67,7 @@ deterministic, bundle compatibility implies all-view compatibility.
   field, not only roots.
 
 ### Tests proving coverage (one per enforcement point)
+
 - `tests/compat.rs`: one minimal case per taxonomy row (add optional/required,
   remove, retype, retype-across-firestore-type, widen, narrow, read
   optional<->required, enum add/remove, model add/remove).
@@ -73,14 +77,17 @@ deterministic, bundle compatibility implies all-view compatibility.
 ## Consequences
 
 ### Positive
+
 - Breaking schema changes fail CI deterministically.
 - One projection for emit and compat: no drift between "what we generate" and
   "what we check".
 
 ### Negative
+
 - Conservative: any def removal (even an unreferenced enum) is flagged BREAKING.
 - Requires committing a bundle per release and wiring the gate into CI.
 
 ### Neutral
+
 - Pre-history documents are out of the TRANSITIVE guarantee unless explicitly
   rescued with presence annotations.

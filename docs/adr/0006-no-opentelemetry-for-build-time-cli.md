@@ -24,12 +24,15 @@ build-time tool rather than a service.
 ## Consequences
 
 ### Positive
+
 - The binary stays single-file and dependency-light (DESIGN S9).
 
 ### Negative
+
 - No distributed traces for firepact invocations; debugging relies on exit codes,
   stderr, and the deterministic golden/compat output.
 
 ### Neutral
+
 - If firepact ever grows a long-running server mode, this ADR should be
   superseded and OTel added there.

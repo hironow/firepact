@@ -25,13 +25,16 @@ WASM portability -- not speed.
 ## Consequences
 
 ### Positive
+
 - Existing users migrate with `pip install` alone; no Node toolchain.
 - The pure binary is installable via `cargo install` and embeddable (WASM later).
 
 ### Negative
+
 - A mixed Rust/Python build (maturin). `uv sync` skips rebuilding the in-tree
   extension on same-version source edits, so `just build-ext` forces it.
 
 ### Neutral
+
 - Phase 0 wired the Python layer to the binary over a subprocess; the native
   PyO3 path replaced it while keeping the subprocess as a fallback.

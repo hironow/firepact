@@ -21,13 +21,16 @@ follow-up is confined to it plus any new 2020-12 output shapes Pydantic emits.
 ## Consequences
 
 ### Positive
+
 - Pydantic compatibility is nearly free; new features flow through automatically.
 - The Rust core stays Python-free and is just a deterministic bundle->TS function.
 
 ### Negative
+
 - Importing the target module drags in its heavy dependencies (torch, etc.); CI
   must isolate generation.
 
 ### Neutral
+
 - The contract artifact is whatever Pydantic emits (plus `x-firestore-*`), so the
   schema-layer golden is pinned per Pydantic version (see the CI drift matrix).
