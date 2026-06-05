@@ -12,6 +12,7 @@ import examples.chat.models  # noqa: F401  (import fires @firestore_realtime)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TS_GOLDEN = REPO_ROOT / "fixtures" / "message.generated.ts"
+EXAMPLE_TS = REPO_ROOT / "examples" / "chat" / "generated.ts"
 
 
 def test_emit_chain_reproduces_typescript_golden() -> None:
@@ -23,6 +24,16 @@ def test_emit_chain_reproduces_typescript_golden() -> None:
 
     # then
     assert actual == expected
+
+
+def test_committed_example_output_is_current() -> None:
+    # The example records the input (models.py) and the final output
+    # (generated.ts) as a pair; this keeps the committed .ts from drifting.
+    # given / when
+    actual = emit_typescript(build_realtime_bundle())
+
+    # then
+    assert EXAMPLE_TS.read_text(encoding="utf-8") == actual
 
 
 def test_cli_module_path_produces_same_bundle() -> None:
