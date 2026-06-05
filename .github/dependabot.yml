@@ -2,6 +2,11 @@
 # minimizing third-party apps with repo write access). Dependabot security
 # updates are enabled separately in the repo's security settings.
 #
+# Supply-chain hardening: a 7-day `cooldown` holds back every routine bump until
+# the new version has been public for a week, so a compromised-then-yanked release
+# is not pulled in on day zero. Cooldown applies to version updates only --
+# Dependabot SECURITY updates (vulnerability fixes) bypass it and still land fast.
+#
 # Ecosystems in this repo:
 #   github-actions  -> .github/workflows/*.yaml (SHA-pinned actions)
 #   cargo           -> Cargo.toml (pyo3 packaging chain)
@@ -13,6 +18,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     labels: ["dependencies", "github-actions"]
     commit-message:
       prefix: "ci"
@@ -24,6 +31,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     labels: ["dependencies", "cargo"]
     commit-message:
       prefix: "chore"
@@ -33,6 +42,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     labels: ["dependencies", "python"]
     commit-message:
       prefix: "chore"
@@ -42,6 +53,8 @@ updates:
     directory: "/tests/e2e/frontend"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     labels: ["dependencies", "e2e-frontend"]
     commit-message:
       prefix: "chore"
