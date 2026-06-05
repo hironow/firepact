@@ -51,24 +51,21 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: auto
           command: build
-          # The manylinux container ships the CPython interpreters; build one wheel
-          # per supported version (requires-python >=3.11,<3.15).
-          args: >-
-            --release --out dist --features python
-            -i python3.11 python3.12 python3.13 python3.14
+          # abi3 (Cargo.toml abi3-py311): one stable-ABI wheel covers CPython 3.11+,
+          # so a single build interpreter suffices.
+          args: --release --out dist --features python -i python3.13
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: wheels-linux-${{ matrix.target }}
           path: dist
 
   native-wheels:
-    name: wheels (${{ matrix.platform.os }} ${{ matrix.platform.target }} py${{ matrix.python }})
+    name: wheels (${{ matrix.platform.os }} ${{ matrix.platform.target }})
     if: github.repository == 'hironow/firepact'
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13", "3.14"]
         platform:
           # macos-latest (Apple Silicon / arm64) for both targets. The Intel
           # macos-13 image was retired 2025-12-04, so x86_64 is cross-compiled
@@ -80,7 +77,8 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ matrix.python }}
+          # abi3: one wheel covers 3.11+; the build interpreter just needs to be >=3.11.
+          python-version: "3.13"
       - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           target: ${{ matrix.platform.target }}
@@ -88,7 +86,7 @@ jobs:
           args: --release --out dist --features python --interpreter python
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: wheels-${{ matrix.platform.os }}-${{ matrix.platform.target }}-py${{ matrix.python }}
+          name: wheels-${{ matrix.platform.os }}-${{ matrix.platform.target }}
           path: dist
 
   sdist:
