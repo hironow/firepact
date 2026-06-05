@@ -53,6 +53,10 @@ fmt-py:
 example: build-ext
     uv run firepact-gen --module examples.chat.models --output examples/chat/generated.ts
 
+# Regenerate the Firestore support matrix doc from the emitter
+gen-docs: build
+    ./target/debug/firepact gen-docs > docs/firestore-support.md
+
 # --- End-to-end (real Firestore emulator + onSnapshot) ---
 
 # Run the E2E suite (needs the firestore emulator on 127.0.0.1:8080 and bun)

@@ -420,6 +420,18 @@ pub fn read_optional(prop: &Value, required: &BTreeSet<&str>, key: &str) -> bool
     !(required.contains(key) && guaranteed)
 }
 
+/// The emit-mode TypeScript type of a single field in a given view (used by the
+/// `gen-docs` support matrix so the documented types are derived from the real
+/// emitter, never hand-maintained). `defs` resolves `$ref`s (may be empty).
+pub fn field_type(defs: &Map<String, Value>, prop: &Value, view: View) -> String {
+    let mut ctx = Ctx {
+        defs,
+        used: BTreeSet::new(),
+        compat: false,
+    };
+    ctx.render_type(prop, view)
+}
+
 /// The structural read-view signature of a single field, used by the compat gate.
 /// `defs` is the bundle's `$defs` (needed to resolve `$ref` enums). String enums
 /// collapse to `string` (open unions are read-equivalent to `string`), so the
