@@ -72,4 +72,4 @@ Verified in CI (see [`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)).
 | firebase JS SDK | v11+ | `Timestamp`, `GeoPoint`, `DocumentReference`, `Bytes`, `VectorValue`, `FieldValue`, `UpdateData`, `FirestoreDataConverter` |
 | Rust | 1.75+ | MSRV (`Cargo.toml`) |
 
-Dependency bumps within these ranges are tracked by Renovate.
+Dependency bumps within these ranges are tracked by Dependabot.
