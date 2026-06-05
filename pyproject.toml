@@ -1,7 +1,7 @@
 [project]
 name = "firepact"
 version = "0.1.7"
-description = "Firestore-aware Pydantic -> TypeScript contract generator with a FULL_TRANSITIVE compatibility gate."
+description = "Generate TypeScript types from your Pydantic models for the Firestore documents you read in realtime -- and fail CI on schema changes that would break a frontend still reading the old shape (FULL_TRANSITIVE)."
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
 license = { text = "MIT" }
