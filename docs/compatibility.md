@@ -61,7 +61,20 @@ firepact compat --history <dir> --new <file>       # vs every *.json in <dir>
 
 ## Operating it
 
-Commit one bundle per release (e.g. `schemas/v*.json`) and run
-`firepact compat --history schemas --new <new-bundle>` in CI. Documents written
-before the oldest committed version fall outside the TRANSITIVE guarantee; rescue
-individual fields with `FirestoreBackfilled`.
+Export the contract bundle and commit one per release; gate every change against
+the committed history:
+
+```sh
+# snapshot the current contract (deterministic, sort_keys-ed)
+firepact-gen --module pkg.models --bundle-out output/current.json
+# diff it against every committed past version
+firepact compat --history schemas --new output/current.json
+# if SAFE, publish this release's bundle into the history
+cp output/current.json schemas/pkg.vN.json
+```
+
+In this repo, [`just compat`](../justfile) runs exactly that for the
+`examples/chat` models against [`../schemas/`](../schemas/), and the CI `compat`
+job enforces it. Documents written before the oldest committed version fall
+outside the TRANSITIVE guarantee; rescue individual fields with
+`FirestoreBackfilled`.
