@@ -281,6 +281,16 @@ fn model_add_is_safe() {
 }
 
 #[test]
+fn definition_kind_change_object_to_enum_is_breaking() {
+    // A def flipping from an object to an enum (or scalar) is a structural break.
+    let old = json!({ "$defs": { "Doc": {
+        "type": "object", "properties": { "a": { "type": "string" } }, "required": ["a"]
+    }}});
+    let new = json!({ "$defs": { "Doc": { "type": "string", "enum": ["a", "b"] } } });
+    assert!(breaking(old, new));
+}
+
+#[test]
 fn model_remove_is_breaking() {
     let mut old = doc(json!({ "a": { "type": "string" } }), json!(["a"]));
     old["$defs"]["Other"] = json!({

@@ -155,6 +155,39 @@ fn compat_two_arg_breaking_exits_nonzero() {
 }
 
 #[test]
+fn emit_missing_file_exits_one() {
+    let out = Command::new(BIN)
+        .args(["emit", "/no/such/bundle.json"])
+        .output()
+        .expect("run");
+    assert_eq!(out.status.code(), Some(1));
+}
+
+#[test]
+fn emit_invalid_json_exits_one() {
+    let mut child = Command::new(BIN)
+        .args(["emit", "-"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn");
+    child.stdin.take().unwrap().write_all(b"not json").unwrap();
+    let out = child.wait_with_output().expect("wait");
+    assert_eq!(out.status.code(), Some(1));
+}
+
+#[test]
+fn compat_wrong_positional_count_exits_two() {
+    let only = write_tmp("solo.json", V1);
+    let out = Command::new(BIN)
+        .args(["compat", only.to_str().unwrap()])
+        .output()
+        .expect("run");
+    assert_eq!(out.status.code(), Some(2));
+}
+
+#[test]
 fn compat_history_skips_new_file_inside_dir() {
     // --new living inside the history dir must not be diffed against itself
     // (an identity diff is always SAFE and would mask an otherwise-empty history).
