@@ -1,0 +1,14 @@
+[package]
+name = "firepact-core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "firepact_core"
+
+[[bin]]
+name = "firepact"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1.0"

@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "Message": {
+      "type": "object",
+      "x-firestore-collection": "rooms/{roomId}/messages",
+      "x-firestore-doc-id-field": "id",
+      "properties": {
+        "author": {
+          "type": "string",
+          "x-firestore-type": "reference",
+          "x-firestore-ref-target": "Profile"
+        },
+        "authorProfile": { "$ref": "#/$defs/Profile" },
+        "body": { "type": "string", "x-firestore-presence-guaranteed": true },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "x-firestore-type": "timestamp",
+          "x-firestore-server-timestamp": true
+        },
+        "id": { "type": "string" },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "reactions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Reaction" }
+        },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["author", "authorProfile", "body", "createdAt", "id", "metadata", "reactions", "tags"]
+    },
+    "Profile": {
+      "type": "object",
+      "properties": {
+        "avatarUrl": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+        "displayName": { "type": "string" }
+      },
+      "required": ["avatarUrl", "displayName"]
+    },
+    "Reaction": {
+      "type": "object",
+      "properties": {
+        "count": { "type": "integer" },
+        "emoji": { "type": "string" }
+      },
+      "required": ["count", "emoji"]
+    }
+  }
+}
