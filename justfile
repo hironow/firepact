@@ -26,16 +26,35 @@ lint-rust:
     cargo fmt --check
     cargo clippy --all-targets -- -D warnings
 
-# --- Aggregate (Python/Node recipes are wired in as those layers land) ---
+# --- Python extractor (firepact) ---
+
+# Sync the Python environment
+sync:
+    uv sync
+
+# Run the Python test suite (needs the firepact binary for the chain test)
+test-py: build
+    uv run pytest
+
+# Lint + type-check Python
+lint-py:
+    uv run ruff check .
+    uv run mypy .
+
+# Format Python sources
+fmt-py:
+    uv run ruff format .
+
+# --- Aggregate (Node/e2e recipes are wired in as those layers land) ---
 
 # Run all fast tests
-test: test-rust
+test: test-rust test-py
 
 # Run all linters / type checks
-lint: lint-rust
+lint: lint-rust lint-py
 
 # Format all sources
-fmt: fmt-rust
+fmt: fmt-rust fmt-py
 
 # Run project-specific semgrep rules (no-op until rules exist under .semgrep/rules/)
 semgrep:
