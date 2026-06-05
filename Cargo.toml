@@ -1,6 +1,6 @@
 [package]
 name = "firepact-core"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 rust-version = "1.75"
 description = "The Rust core behind firepact: projects an enriched JSON Schema bundle into Firestore-aware TypeScript (read/write/update views) and runs the FULL_TRANSITIVE compatibility gate. Node- and Python-free."
