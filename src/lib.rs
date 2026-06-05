@@ -170,7 +170,9 @@ impl<'a> Ctx<'a> {
                 ),
             };
         format!(
-            "export const {const_name}Converter: FirestoreDataConverter<{read}> = {{\n\
+            "// Read converter (onSnapshot / getDoc): injects the doc id. For writes\n\
+             // use `{read}Write` with setDoc/updateDoc directly (not via this converter).\n\
+             export const {const_name}Converter: FirestoreDataConverter<{read}> = {{\n\
              \x20 toFirestore: (model) => {{\n\
              {to_body}\
              \x20 }},\n\
@@ -225,7 +227,7 @@ impl<'a> Ctx<'a> {
         for k in ["anyOf", "oneOf"] {
             if let Some(arr) = node.get(k).and_then(Value::as_array) {
                 let parts: Vec<String> = arr.iter().map(|b| self.render_type(b, view)).collect();
-                return dedup_union(parts);
+                return self.union(parts);
             }
         }
         // 6) by JSON "type" (string or array of strings).
@@ -237,10 +239,27 @@ impl<'a> Ctx<'a> {
                     .filter_map(Value::as_str)
                     .map(|t| self.render_json_type(t, node, view))
                     .collect();
-                dedup_union(parts)
+                self.union(parts)
             }
             _ => "unknown".to_string(),
         }
+    }
+
+    /// Join union branches, deduplicated. In compat mode the branches are also
+    /// sorted: a union is a set, so reordering its members is not a contract
+    /// change (tuples, rendered with `[...]`, keep their order and are unaffected).
+    fn union(&self, parts: Vec<String>) -> String {
+        let mut seen = BTreeSet::new();
+        let mut ordered = Vec::new();
+        for p in parts {
+            if seen.insert(p.clone()) {
+                ordered.push(p);
+            }
+        }
+        if self.compat {
+            ordered.sort();
+        }
+        ordered.join(" | ")
     }
 
     fn render_firestore(&mut self, fs: &str, node: &Value, view: View) -> String {
@@ -434,17 +453,6 @@ fn is_string_enum_node(node: &Value) -> bool {
         .and_then(Value::as_array)
         .map(|a| !a.is_empty() && a.iter().all(Value::is_string))
         .unwrap_or(false)
-}
-
-fn dedup_union(parts: Vec<String>) -> String {
-    let mut seen = BTreeSet::new();
-    let mut ordered = Vec::new();
-    for p in parts {
-        if seen.insert(p.clone()) {
-            ordered.push(p);
-        }
-    }
-    ordered.join(" | ")
 }
 
 fn literal(v: &Value) -> String {

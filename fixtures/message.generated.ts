@@ -51,6 +51,8 @@ export interface ReactionWrite {
   emoji: string;
 }
 
+// Read converter (onSnapshot / getDoc): injects the doc id. For writes
+// use `MessageWrite` with setDoc/updateDoc directly (not via this converter).
 export const messageConverter: FirestoreDataConverter<Message> = {
   toFirestore: (model) => {
     const { id: _id, ...rest } = model;

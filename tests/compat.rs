@@ -239,6 +239,35 @@ fn collection_path_change_is_breaking() {
     assert!(breaking(old, new));
 }
 
+// --- a union is a set: branch reordering is not a contract change ---
+
+#[test]
+fn union_branch_reorder_is_safe() {
+    let old = doc(
+        json!({ "f": { "anyOf": [{ "type": "string" }, { "type": "integer" }, { "type": "null" }] } }),
+        json!(["f"]),
+    );
+    let new = doc(
+        json!({ "f": { "anyOf": [{ "type": "integer" }, { "type": "string" }, { "type": "null" }] } }),
+        json!(["f"]),
+    );
+    assert!(!breaking(old, new));
+}
+
+#[test]
+fn oneof_ref_reorder_is_safe() {
+    let mk = |order: Value| {
+        json!({ "$defs": {
+            "Cat": { "type": "object", "properties": { "meow": { "type": "boolean" } }, "required": ["meow"] },
+            "Dog": { "type": "object", "properties": { "bark": { "type": "boolean" } }, "required": ["bark"] },
+            "Doc": { "type": "object", "properties": { "pet": { "oneOf": order } }, "required": ["pet"] }
+        }})
+    };
+    let old = mk(json!([{ "$ref": "#/$defs/Cat" }, { "$ref": "#/$defs/Dog" }]));
+    let new = mk(json!([{ "$ref": "#/$defs/Dog" }, { "$ref": "#/$defs/Cat" }]));
+    assert!(!breaking(old, new));
+}
+
 #[test]
 fn model_add_is_safe() {
     let old = doc(json!({ "a": { "type": "string" } }), json!(["a"]));
