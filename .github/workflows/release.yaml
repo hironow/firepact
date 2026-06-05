@@ -155,7 +155,7 @@ jobs:
                "https://crates.io/api/v1/crates/firepact-core/${version}"; then
             echo "firepact-core ${version} is already on crates.io -- skipping cargo publish."
           else
-            cargo publish -p firepact-core
+            cargo publish -p firepact-core --locked
           fi
 
   pypi-publish:
