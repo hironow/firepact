@@ -96,3 +96,23 @@ def test_root_carries_realtime_metadata() -> None:
     assert message["x-firestore-collection"] == "rooms/{roomId}/messages"
     assert message["x-firestore-doc-id-field"] == "id"
     assert "x-firestore-collection" not in _bundle()["$defs"]["Profile"]
+
+
+def test_all_object_defs_use_camel_case_wire_keys() -> None:
+    # Trap #1 guard at depth: every property key in every object def must be
+    # camelCase, so a nested model that forgot the camel alias generator is caught.
+    defs = _bundle()["$defs"]
+    snake = [
+        f"{name}.{key}"
+        for name, node in defs.items()
+        for key in node.get("properties", {})
+        if "_" in key
+    ]
+    assert snake == [], f"non-camelCase wire keys (alias drift): {snake}"
+
+
+def test_nested_profile_required_is_pinned() -> None:
+    # avatar_url is `str | None` with NO default -> required (write view), even
+    # though it is nullable. Locks the easy-to-drift required-ness.
+    profile = _bundle()["$defs"]["Profile"]
+    assert set(profile["required"]) == {"avatarUrl", "displayName"}
