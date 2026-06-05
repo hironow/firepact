@@ -11,7 +11,7 @@ The only Python<->Rust contract. Base JSON `type` is kept as a fallback;
 
 | Keyword | On | Value | Meaning |
 |---|---|---|---|
-| `x-firestore-type` | field | `timestamp`/`bytes`/`reference`/`geopoint` | wire type override |
+| `x-firestore-type` | field | `timestamp`/`bytes`/`reference`/`geopoint`/`vector` | wire type override |
 | `x-firestore-server-timestamp` | field | `true` | written via `serverTimestamp()` |
 | `x-firestore-ref-target` | reference field | type name | `DocumentReference<T>` target |
 | `x-firestore-presence-guaranteed` | field | `true` | present on all live docs (read may be required) |
@@ -20,7 +20,8 @@ The only Python<->Rust contract. Base JSON `type` is kept as a fallback;
 | `x-firestore-doc-id-field` | root model | field name | doc id; injected on read, excluded on write |
 
 Stamped from Python via `Annotated[...]` metadata (`FirestoreRef`,
-`FirestoreServerTimestamp`, `FirestoreGeoPoint`, `FirestoreBackfilled`) and the
+`FirestoreServerTimestamp`, `FirestoreGeoPoint`, `FirestoreVector`,
+`FirestoreBackfilled`) and the
 custom `FirestoreJsonSchema` (datetime -> timestamp, bytes -> bytes). `int`/
 `float` are not stamped (JSON Schema already distinguishes `integer`/`number`).
 
@@ -38,6 +39,7 @@ reserved for a future version-aware presence rule.
 | `bytes` | Bytes | `Bytes` (client SDK wrapper; `.toUint8Array()`) |
 | `Annotated[str, FirestoreRef("X")]` | DocumentReference | `DocumentReference<X>` |
 | geo + `FirestoreGeoPoint()` | GeoPoint | `GeoPoint` |
+| `Annotated[list[float], FirestoreVector()]` | Vector | `VectorValue` |
 | nested `BaseModel` | Map | nested interface |
 | `list[T]` | Array | `T[]` |
 | `tuple[A, B]` (`prefixItems`) | Array | `[A, B]` |
