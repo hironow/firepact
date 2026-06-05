@@ -157,9 +157,13 @@ impl<'a> Ctx<'a> {
         if let Some(c) = node.get("const") {
             return literal(c);
         }
-        // 4) inline enum.
+        // 4) inline enum. String enums read as an open union (trap #5).
         if let Some(arr) = node.get("enum").and_then(Value::as_array) {
-            return arr.iter().map(literal).collect::<Vec<_>>().join(" | ");
+            let strict = arr.iter().map(literal).collect::<Vec<_>>().join(" | ");
+            if view == View::Read && arr.iter().all(Value::is_string) {
+                return format!("{strict}{OPEN_ENUM_SUFFIX}");
+            }
+            return strict;
         }
         // 5) anyOf / oneOf -> union (null branch -> "null").
         for k in ["anyOf", "oneOf"] {
@@ -231,13 +235,18 @@ impl<'a> Ctx<'a> {
 
     fn render_ref(&self, r: &str, view: View) -> String {
         let name = r.rsplit('/').next().unwrap_or(r);
-        let is_enum = self
-            .defs
-            .get(name)
-            .map(|d| d.get("enum").is_some())
-            .unwrap_or(false);
+        let def = self.defs.get(name);
+        let is_enum = def.map(|d| d.get("enum").is_some()).unwrap_or(false);
         if is_enum {
-            name.to_string() // enums are view-agnostic (for now)
+            // The enum def is emitted once, view-agnostic (no Write suffix).
+            // Openness (trap #5) is applied at the read reference site only,
+            // and only for string enums (no clean open idiom for numbers).
+            let string_enum = def.map(is_string_enum_node).unwrap_or(false);
+            if view == View::Read && string_enum {
+                format!("{name}{OPEN_ENUM_SUFFIX}")
+            } else {
+                name.to_string()
+            }
         } else {
             match view {
                 View::Read => name.to_string(),
@@ -279,6 +288,18 @@ impl<'a> Ctx<'a> {
             _ => "unknown".to_string(),
         }
     }
+}
+
+/// Read-side open-enum tail: lets a string union accept unknown members so a
+/// backend adding/removing enum values never breaks an old front (trap #5).
+const OPEN_ENUM_SUFFIX: &str = " | (string & {})";
+
+/// True when the node is an enum whose every member is a string literal.
+fn is_string_enum_node(node: &Value) -> bool {
+    node.get("enum")
+        .and_then(Value::as_array)
+        .map(|a| !a.is_empty() && a.iter().all(Value::is_string))
+        .unwrap_or(false)
 }
 
 fn dedup_union(parts: Vec<String>) -> String {

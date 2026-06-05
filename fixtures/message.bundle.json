@@ -19,6 +19,7 @@
           "x-firestore-server-timestamp": true
         },
         "id": { "type": "string" },
+        "kind": { "$ref": "#/$defs/MessageKind" },
         "metadata": {
           "type": "object",
           "additionalProperties": { "type": "string" }
@@ -29,7 +30,11 @@
         },
         "tags": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["author", "authorProfile", "body", "createdAt", "id", "metadata", "reactions", "tags"]
+      "required": ["author", "authorProfile", "body", "createdAt", "id", "kind", "metadata", "reactions", "tags"]
+    },
+    "MessageKind": {
+      "type": "string",
+      "enum": ["text", "image", "system"]
     },
     "Profile": {
       "type": "object",

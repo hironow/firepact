@@ -10,6 +10,7 @@ export interface Message {
   body: string;
   createdAt?: Timestamp | null;
   id: string;
+  kind?: MessageKind | (string & {});
   metadata?: Record<string, string>;
   reactions?: Reaction[];
   tags?: string[];
@@ -20,10 +21,13 @@ export interface MessageWrite {
   authorProfile: ProfileWrite;
   body: string;
   createdAt: FieldValue;
+  kind: MessageKind;
   metadata: Record<string, string>;
   reactions: ReactionWrite[];
   tags: string[];
 }
+
+export type MessageKind = "text" | "image" | "system";
 
 export interface Profile {
   avatarUrl?: string | null;
