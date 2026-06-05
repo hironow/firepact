@@ -49,7 +49,7 @@ export interface ReactionWrite {
   emoji: string;
 }
 
-export const messageConverter: FirestoreDataConverter<Message, MessageWrite> = {
+export const messageConverter: FirestoreDataConverter<Message> = {
   toFirestore: (model) => model,
   fromFirestore: (snapshot, options) => {
     const data = snapshot.data(options) as Omit<Message, "id">;

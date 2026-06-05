@@ -142,7 +142,10 @@ impl<'a> Ctx<'a> {
         self.used.insert("FirestoreDataConverter");
         let const_name = lower_first(name);
         let read = name;
-        let write = format!("{name}Write");
+        // A single app-type converter (the read view). Read/write asymmetry is
+        // expressed by the separate `{name}Write` type used for write payloads;
+        // forcing it as the converter's DbModelType cannot type-check because a
+        // read value (e.g. `Timestamp | null`) is not a write value (`FieldValue`).
         let from_body = match node.get("x-firestore-doc-id-field").and_then(Value::as_str) {
             Some(doc_id) => format!(
                 "    const data = snapshot.data(options) as Omit<{read}, \"{doc_id}\">;\n    return {{ ...data, {doc_id}: snapshot.id }};\n",
@@ -150,7 +153,7 @@ impl<'a> Ctx<'a> {
             None => format!("    return snapshot.data(options) as {read};\n"),
         };
         format!(
-            "export const {const_name}Converter: FirestoreDataConverter<{read}, {write}> = {{\n\
+            "export const {const_name}Converter: FirestoreDataConverter<{read}> = {{\n\
              \x20 toFirestore: (model) => model,\n\
              \x20 fromFirestore: (snapshot, options) => {{\n\
              {from_body}\

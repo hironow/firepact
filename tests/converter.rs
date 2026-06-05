@@ -21,9 +21,9 @@ fn root_gets_a_converter_that_injects_doc_id() {
         }
     }));
 
-    // then
+    // then: a single app-type converter (read view); reads inject the doc id
     assert!(
-        ts.contains("export const messageConverter: FirestoreDataConverter<Message, MessageWrite>"),
+        ts.contains("export const messageConverter: FirestoreDataConverter<Message>"),
         "converter decl:\n{ts}"
     );
     assert!(ts.contains("id: snapshot.id"), "doc-id injection:\n{ts}");
