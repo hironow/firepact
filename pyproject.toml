@@ -86,6 +86,10 @@ strict = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 files = ["python", "examples", "tests"]
+# tests/e2e is glue over optional (e2e-group) + emulator deps; its correctness is
+# verified by running it (the e2e job), not by type-checking. Excluding it keeps
+# mypy stable whether or not google-cloud-firestore happens to be installed.
+exclude = ["^tests/e2e/"]
 
 # google-cloud-firestore is an e2e-only dependency (not in the default env).
 [[tool.mypy.overrides]]

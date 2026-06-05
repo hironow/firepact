@@ -4,14 +4,22 @@ is the artifact committed to schemas/ and fed to `firepact compat`."""
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
+import pytest
 from firepact.cli import main
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BUNDLE_GOLDEN = REPO_ROOT / "fixtures" / "message.bundle.json"
 
 
+@pytest.mark.skipif(
+    bool(os.environ.get("FIREPACT_PYDANTIC_MATRIX")),
+    reason="exact schema-layer bundle is frozen against the locked pydantic "
+    "(e.g. 2.9 emits enum alongside const for Literal); the matrix checks the "
+    "emit-layer golden, which is version-robust",
+)
 def test_bundle_out_writes_the_contract_bundle(tmp_path: Path) -> None:
     # given
     out = tmp_path / "bundle.json"
