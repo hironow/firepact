@@ -1,8 +1,8 @@
 # firepact docs
 
 Live documentation of the **current** implementation (the "What"). Decisions
-(the "Why") live in [`adr/`](adr/); [`../DESIGN.md`](../DESIGN.md) and
-[`../HANDOFF.md`](../HANDOFF.md) are the original design/handoff seed documents.
+(the "Why") live in [`adr/`](adr/); [`DESIGN.md`](DESIGN.md) and
+[`HANDOFF.md`](HANDOFF.md) are the original design/handoff seed documents.
 
 | Doc | What it covers |
 |---|---|

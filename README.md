@@ -26,8 +26,9 @@ gate**.
 [contract & projection](docs/contract.md), and the
 [compatibility gate](docs/compatibility.md). Decisions are in
 [`docs/adr/`](docs/adr/); current status is in [`docs/handover.md`](docs/handover.md).
-`DESIGN.md` and `HANDOFF.md` are the original design/handoff seed documents
-(historical context, not the live status).
+[`docs/DESIGN.md`](docs/DESIGN.md) and [`docs/HANDOFF.md`](docs/HANDOFF.md) are
+the original design/handoff seed documents (historical context, not the live
+status).
 
 ## Components
 
