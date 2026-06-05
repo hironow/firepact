@@ -79,3 +79,11 @@ Each realtime root (carrying `x-firestore-collection`) also gets:
   collection template becomes a `string` argument.
 
 A complete example is in [`../examples/chat/generated.ts`](../examples/chat/generated.ts).
+
+## Output conventions
+
+`firebase/firestore` symbols are referenced only in type positions, so the
+generated import is type-only (`import type { ... } from "firebase/firestore"`).
+The output therefore type-checks under `verbatimModuleSyntax` / `isolatedModules`
+(the strict default in modern TypeScript 6/7 toolchains), as exercised by the
+e2e `tsc` check.
