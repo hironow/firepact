@@ -19,11 +19,15 @@ gate**.
   coexist with any generation of frontend forever. firepact's `compat` gate
   fails CI on breaking schema changes (`FULL_TRANSITIVE`).
 
-See [`DESIGN.md`](DESIGN.md) for the architecture and the `x-firestore-*`
-contract vocabulary, and [`docs/adr/`](docs/adr/) for the decisions behind it.
-Current status lives in [`docs/handover.md`](docs/handover.md); [`docs/intent.md`](docs/intent.md)
-captures the goal. `DESIGN.md` and `HANDOFF.md` are the original design/handoff
-seed documents (historical context, not the live status).
+## Documentation
+
+[`docs/`](docs/) documents the current implementation:
+[architecture](docs/architecture.md), [usage](docs/usage.md),
+[contract & projection](docs/contract.md), and the
+[compatibility gate](docs/compatibility.md). Decisions are in
+[`docs/adr/`](docs/adr/); current status is in [`docs/handover.md`](docs/handover.md).
+`DESIGN.md` and `HANDOFF.md` are the original design/handoff seed documents
+(historical context, not the live status).
 
 ## Components
 

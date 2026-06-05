@@ -83,5 +83,6 @@ processes.
 - `python/firepact/` - extractor; `examples/chat/models.py` - example models.
 - `tests/` - golden, cli, open_enum, converter, compat, emit_phase2 (rust);
   unit/integration/e2e (python).
-- `docs/adr/0001-0007` - the "why".
-- `just test` / `just lint` / `just test-e2e` / `just build-ext`.
+- `docs/` - live docs of the current system: `architecture.md`, `usage.md`,
+  `contract.md`, `compatibility.md` (the "what"); `docs/adr/0001-0007` - the "why".
+- `just test` / `just lint` / `just test-e2e` / `just build-ext` / `just example`.

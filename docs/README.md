@@ -1,0 +1,17 @@
+# firepact docs
+
+Live documentation of the **current** implementation (the "What"). Decisions
+(the "Why") live in [`adr/`](adr/); [`../DESIGN.md`](../DESIGN.md) and
+[`../HANDOFF.md`](../HANDOFF.md) are the original design/handoff seed documents.
+
+| Doc | What it covers |
+|---|---|
+| [architecture.md](architecture.md) | components, contract artifact, data flow, determinism, distribution |
+| [usage.md](usage.md) | annotating models, generating TS, the read/write/update views, the gate |
+| [contract.md](contract.md) | `x-firestore-*` vocabulary, wire-type mapping, view projection, open enums |
+| [compatibility.md](compatibility.md) | the FULL_TRANSITIVE gate and its breaking-change taxonomy |
+| [intent.md](intent.md) | the requester's goal and success criteria for the work |
+| [handover.md](handover.md) | current status and next actions for the next actor |
+| [adr/](adr/) | architecture decision records (immutable history) |
+
+Documentation here MUST match the implementation; outdated docs are bugs.
