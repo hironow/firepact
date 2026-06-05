@@ -3,6 +3,8 @@
 
 import type { Bytes, DocumentReference, FieldValue, FirestoreDataConverter, GeoPoint, Timestamp, UpdateData, VectorValue } from "firebase/firestore";
 
+import type { MessageKind } from "./dtos";
+
 export interface FileAttachment {
   kind?: "file";
   size?: number;
@@ -68,8 +70,6 @@ export interface MessageWrite {
 }
 
 export type MessageUpdate = UpdateData<MessageWrite>;
-
-export type MessageKind = "text" | "image" | "system";
 
 export interface Profile {
   avatarUrl?: string | null;

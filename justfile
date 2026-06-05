@@ -49,9 +49,13 @@ lint-py:
 fmt-py:
     uv run ruff format .
 
-# Regenerate the committed example output (examples/chat/generated.ts)
+# Regenerate the committed example output. The example is the worked reference for
+# the real layered pattern: plain HTTP DTOs (dtos.ts) are the single source for
+# shared enums, and the Firestore docs (generated.ts) import them via --shared-from
+# (names derived from the dtos module's references -- no hand-maintained list).
 example: build-ext
-    uv run firepact-gen --module examples.chat.models --output examples/chat/generated.ts
+    uv run firepact-gen --plain --module examples.chat.dtos --output examples/chat/dtos.ts
+    uv run firepact-gen --module examples.chat.models --output examples/chat/generated.ts --shared ./dtos --shared-from examples.chat.dtos
 
 # Regenerate the Firestore support matrix doc from the emitter
 gen-docs: build

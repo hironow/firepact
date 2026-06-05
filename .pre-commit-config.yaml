@@ -15,6 +15,7 @@ exclude: |
     tests/e2e/frontend/node_modules/|
     fixtures/|
     examples/chat/generated\.ts|
+    examples/chat/dtos\.ts|
     tests/e2e/frontend/generated\.ts|
     docs/firestore-support\.md
   )

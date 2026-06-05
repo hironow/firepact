@@ -3,7 +3,9 @@ sibling module instead of redefining them."""
 
 from __future__ import annotations
 
-from firepact.cli import emit_shared_typescript
+from pathlib import Path
+
+from firepact.cli import emit_shared_typescript, main
 
 _BUNDLE: dict[str, object] = {
     "$defs": {
@@ -29,3 +31,25 @@ def test_no_shared_names_defines_everything() -> None:
     ts = emit_shared_typescript(_BUNDLE, "./types", [])
     assert "export type E =" in ts  # nothing shared -> defined locally
     assert 'from "./types"' not in ts
+
+
+def test_shared_from_derives_names_from_the_module(tmp_path: Path) -> None:
+    # --shared-from derives the shared set from the dtos module's own output, so
+    # MessageKind (shared) is imported from ./dtos without a hand-maintained list.
+    out = tmp_path / "fs.ts"
+    code = main(
+        [
+            "--module",
+            "examples.chat.models",
+            "--output",
+            str(out),
+            "--shared",
+            "./dtos",
+            "--shared-from",
+            "examples.chat.dtos",
+        ]
+    )
+    assert code == 0
+    txt = out.read_text(encoding="utf-8")
+    assert 'import type { MessageKind } from "./dtos";' in txt
+    assert "export type MessageKind =" not in txt

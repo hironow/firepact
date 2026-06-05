@@ -54,6 +54,27 @@ pydantic2ts  --module pkg.models --output types.ts   # prior-tool-compatible ali
 optional (defaults to stdout). `--exclude` is accepted for prior-tool
 compatibility (no-op).
 
+### Plain DTOs and a shared single source
+
+A project usually also has plain HTTP DTOs whose `datetime` is an ISO **string**
+(not a Firestore `Timestamp`). Generate those with `--plain`, then have the
+Firestore output import the types they share (e.g. enums) from the DTO file so
+each type is defined exactly once:
+
+```sh
+# 1. plain DTOs (datetime -> string, one interface per model) -- the single source
+firepact-gen --plain --module pkg.dtos --output dtos.ts
+# 2. Firestore docs, importing shared types from ./dtos (names DERIVED from the
+#    dtos module -- no hand-maintained list; only referenced ones are imported)
+firepact-gen --module pkg.models --output firestore.ts \
+  --shared ./dtos --shared-from pkg.dtos
+```
+
+`--shared <module-specifier>` is resolved relative to `--output`; `--shared-from`
+derives the shared names from the plain module's own output (so they are
+guaranteed to exist there). `--shared-names A,B` can add explicit names. The
+[`../examples/chat/`](../examples/chat/) example uses exactly this layout.
+
 Python API:
 
 ```python

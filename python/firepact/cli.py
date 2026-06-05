@@ -16,7 +16,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from firepact.firestore_select import build_realtime_bundle
 
@@ -205,13 +205,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--shared",
-        help="TS module specifier (relative to --output) to IMPORT --shared-names "
+        help="TS module specifier (relative to --output) to IMPORT shared types "
         "from instead of redefining them (cross-file single source).",
+    )
+    parser.add_argument(
+        "--shared-from",
+        help="Python module whose plain-generated types are the shared source. "
+        "firepact derives the shared names from it (the types --shared defines), so "
+        "no hand-maintained list -- only the ones actually referenced are imported.",
     )
     parser.add_argument(
         "--shared-names",
         default="",
-        help="Comma-separated type names to import from --shared (e.g. shared enums).",
+        help="Explicit comma-separated names to import from --shared (added to "
+        "anything derived from --shared-from).",
     )
     parser.add_argument(
         "--exclude",
@@ -240,8 +247,17 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.shared:
-        names = [n for n in args.shared_names.split(",") if n]
-        typescript = emit_shared_typescript(bundle, args.shared, names)
+        names = {n for n in args.shared_names.split(",") if n}
+        if args.shared_from:
+            # Derive the shared set from the plain module's own output (the types
+            # it defines), so the names come from real Python references -- no hand
+            # -maintained list, and they are guaranteed to exist in --shared.
+            plain_defs = cast(
+                "dict[str, object]",
+                build_plain_bundle(args.shared_from).get("$defs", {}),
+            )
+            names |= set(plain_defs)  # emit imports only the referenced subset
+        typescript = emit_shared_typescript(bundle, args.shared, sorted(names))
     else:
         typescript = emit_typescript(bundle)
 
