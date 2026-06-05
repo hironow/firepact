@@ -507,9 +507,36 @@ mod python {
         Ok(crate::emit(&bundle))
     }
 
+    /// Diff two contract bundles (JSON strings). Returns a JSON array of findings:
+    /// `[{"def", "field"|null, "verdict": "SAFE"|"BREAKING", "message"}]`.
+    #[pyfunction]
+    fn compat(old_json: &str, new_json: &str) -> PyResult<String> {
+        use crate::compat::{diff, Verdict};
+        let old: serde_json::Value =
+            serde_json::from_str(old_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+        let new: serde_json::Value =
+            serde_json::from_str(new_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+        let findings: Vec<serde_json::Value> = diff(&old, &new)
+            .iter()
+            .map(|f| {
+                serde_json::json!({
+                    "def": f.def,
+                    "field": f.field,
+                    "verdict": match f.verdict {
+                        Verdict::Safe => "SAFE",
+                        Verdict::Breaking => "BREAKING",
+                    },
+                    "message": f.message,
+                })
+            })
+            .collect();
+        Ok(serde_json::Value::Array(findings).to_string())
+    }
+
     #[pymodule]
     fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
         m.add_function(wrap_pyfunction!(emit, m)?)?;
+        m.add_function(wrap_pyfunction!(compat, m)?)?;
         Ok(())
     }
 }

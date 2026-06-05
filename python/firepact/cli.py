@@ -16,11 +16,15 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 from firepact.firestore_select import build_realtime_bundle
 
 # A dotted Python module path: identifiers separated by dots, nothing else.
 _MODULE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*")
+
+# `firepact-compat <old.json> <new.json>` takes exactly two positional paths.
+_PAIRWISE_ARGC = 2
 
 
 def find_binary() -> str:
@@ -136,6 +140,88 @@ def main(argv: list[str] | None = None) -> int:
     elif not args.bundle_out:
         sys.stdout.write(emit_typescript(bundle))
     return 0
+
+
+# --- compatibility gate (usable from a pip install, no cargo binary needed) ---
+
+
+def _eprint(message: str) -> None:
+    sys.stderr.write(message + "\n")
+
+
+def check_compat(old_json: str, new_json: str) -> list[dict[str, Any]]:
+    """Diff two contract bundles, returning structured findings.
+
+    Each finding is ``{"def", "field"|None, "verdict": "SAFE"|"BREAKING",
+    "message"}``. Requires the native module (built by maturin / `pip install`).
+    """
+    from firepact import _core
+
+    findings: list[dict[str, Any]] = json.loads(_core.compat(old_json, new_json))
+    return findings
+
+
+def _report(label: str, findings: list[dict[str, Any]]) -> None:
+    for f in findings:
+        loc = f["def"] if f["field"] is None else f"{f['def']}.{f['field']}"
+        _eprint(f"[{label}] {f['verdict']:8} {loc} {f['message']}")
+
+
+def _history_files(directory: str) -> list[Path]:
+    return sorted(Path(directory).glob("*.json"))
+
+
+def _compat_history(history_dir: str, new_path: str) -> int:
+    new_text = Path(new_path).read_text(encoding="utf-8")
+    new_resolved = Path(new_path).resolve()
+    any_breaking = False
+    compared = 0
+    for past in _history_files(history_dir):
+        if past.resolve() == new_resolved:
+            continue  # don't diff --new against itself
+        compared += 1
+        findings = check_compat(past.read_text(encoding="utf-8"), new_text)
+        _report(past.name, findings)
+        any_breaking |= any(f["verdict"] == "BREAKING" for f in findings)
+    if any_breaking:
+        _eprint("compat: BREAKING against at least one past version")
+        return 1
+    _eprint(f"compat: compatible with all {compared} past version(s)")
+    return 0
+
+
+def compat_main(argv: list[str] | None = None) -> int:
+    raw = sys.argv[1:] if argv is None else argv
+    parser = argparse.ArgumentParser(
+        prog="firepact-compat",
+        description="FULL_TRANSITIVE Firestore contract compatibility gate.",
+    )
+    parser.add_argument("paths", nargs="*", help="<old.json> <new.json>")
+    parser.add_argument("--history", help="Directory of committed past *.json bundles.")
+    parser.add_argument("--new", dest="new_path", help="New bundle (with --history).")
+    args = parser.parse_args(raw)
+
+    try:
+        from firepact import _core  # noqa: F401 - probe the native module
+    except ImportError:
+        # Dev fallback: delegate to the firepact binary (a pip install has _core).
+        return subprocess.run([find_binary(), "compat", *raw], check=False).returncode
+
+    if args.history and args.new_path:
+        return _compat_history(args.history, args.new_path)
+    if len(args.paths) == _PAIRWISE_ARGC:
+        findings = check_compat(
+            Path(args.paths[0]).read_text(encoding="utf-8"),
+            Path(args.paths[1]).read_text(encoding="utf-8"),
+        )
+        _report("compat", findings)
+        if any(f["verdict"] == "BREAKING" for f in findings):
+            _eprint("compat: BREAKING changes detected")
+            return 1
+        _eprint("compat: compatible")
+        return 0
+    # argparse error() raises SystemExit, so this never falls through.
+    parser.error("expected <old.json> <new.json> or --history <dir> --new <file>")
 
 
 if __name__ == "__main__":

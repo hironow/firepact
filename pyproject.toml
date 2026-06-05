@@ -29,6 +29,8 @@ Homepage = "https://github.com/hironow/firepact"
 pydantic2ts = "firepact.cli:main"
 # Native entry point for the Firestore-aware generator.
 firepact-gen = "firepact.cli:main"
+# FULL_TRANSITIVE compatibility gate (no cargo binary needed).
+firepact-compat = "firepact.cli:compat_main"
 
 [dependency-groups]
 dev = [
