@@ -15,7 +15,7 @@ export function summarize(m: Message): string {
   const reactionCount: number = m.reactions?.length ?? 0;
   const edited: Timestamp | undefined = m.editedAt; // non-server datetime -> Timestamp
   const loc: GeoPoint | undefined = m.location; // -> GeoPoint
-  const bytes: number = m.thumbnail?.byteLength ?? 0; // -> Uint8Array
+  const bytes: number = m.thumbnail?.toUint8Array().byteLength ?? 0; // -> Bytes
   const span: number = (m.selection?.[1] ?? 0) - (m.selection?.[0] ?? 0); // tuple [number, number]
   return `${idLen}:${body}:${String(created)}:${kind}:${tagCount}:${reactionCount}:${String(edited)}:${String(loc)}:${bytes}:${span}`;
 }

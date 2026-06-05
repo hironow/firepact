@@ -35,7 +35,7 @@ reserved for a future version-aware presence rule.
 |---|---|---|
 | `datetime` | Timestamp | `Timestamp` (server-ts: read `Timestamp \| null`) |
 | `int` / `float` | Integer / Double | `number` |
-| `bytes` | Bytes | `Uint8Array` |
+| `bytes` | Bytes | `Bytes` (client SDK wrapper; `.toUint8Array()`) |
 | `Annotated[str, FirestoreRef("X")]` | DocumentReference | `DocumentReference<X>` |
 | geo + `FirestoreGeoPoint()` | GeoPoint | `GeoPoint` |
 | nested `BaseModel` | Map | nested interface |
@@ -59,7 +59,7 @@ lack a field). Per field:
 | `DocumentReference` | `DocumentReference<T>` | `DocumentReference<T>` |
 | document id field | `string` (converter injects `snapshot.id`) | excluded |
 | readOnly (`@computed_field`) | included (derived value) | excluded (not writable) |
-| `bytes` | `Uint8Array` | `Uint8Array` |
+| `bytes` | `Bytes` | `Bytes` |
 
 - Optionality (`?`) is orthogonal to value nullability (`| null`).
 - read-required = `required` AND presence-guaranteed; otherwise optional (safe

@@ -4,6 +4,7 @@
 
 import { initializeApp } from "firebase/app";
 import {
+  Bytes,
   connectFirestoreEmulator,
   doc,
   DocumentReference,
@@ -59,8 +60,8 @@ const unsubscribe = onSnapshot(
     if (m.location !== undefined && !(m.location instanceof GeoPoint)) {
       violations.push("location not GeoPoint");
     }
-    if (m.thumbnail !== undefined && !(m.thumbnail instanceof Uint8Array)) {
-      violations.push("thumbnail not Uint8Array");
+    if (m.thumbnail !== undefined && !(m.thumbnail instanceof Bytes)) {
+      violations.push("thumbnail not Bytes");
     }
 
     clearTimeout(timeout);
@@ -78,7 +79,7 @@ const unsubscribe = onSnapshot(
         authorIsRef: m.author instanceof DocumentReference,
         editedAtIsTimestamp: m.editedAt instanceof Timestamp,
         locationIsGeoPoint: m.location instanceof GeoPoint,
-        thumbnailIsBytes: m.thumbnail instanceof Uint8Array,
+        thumbnailIsBytes: m.thumbnail instanceof Bytes,
         attachmentKind: m.attachment?.kind ?? null,
         selection: m.selection ?? [],
         tags: m.tags ?? [],

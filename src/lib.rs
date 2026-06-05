@@ -301,7 +301,12 @@ impl<'a> Ctx<'a> {
                     }
                 }
             }
-            "bytes" => "Uint8Array".to_string(), // global, no import
+            "bytes" => {
+                // The firebase client SDK returns/accepts a `Bytes` wrapper for
+                // blob fields (not a raw Uint8Array; use bytes.toUint8Array()).
+                self.used.insert("Bytes");
+                "Bytes".to_string()
+            }
             "geopoint" => {
                 self.used.insert("GeoPoint");
                 "GeoPoint".to_string()
