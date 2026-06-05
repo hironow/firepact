@@ -40,10 +40,14 @@ pub fn emit(bundle: &Value) -> String {
         } else if is_object(node) {
             body.push_str(&ctx.render_interface(name, node, View::Read));
             body.push_str(&ctx.render_interface(name, node, View::Write));
-            // Realtime roots get a minimal converter so the read-view doc-id
-            // contract (`id: snapshot.id`) is actually satisfiable.
-            if node.get("x-firestore-collection").is_some() {
+            // Realtime roots get the update view, a converter, and a typed path
+            // helper (the doc-id converter keeps `id: snapshot.id` satisfiable).
+            if let Some(col) = node.get("x-firestore-collection").and_then(Value::as_str) {
+                body.push_str(&format!(
+                    "export type {name}Update = Partial<{name}Write>;\n\n"
+                ));
                 converters.push_str(&ctx.render_converter(name, node));
+                converters.push_str(&render_path_helper(col));
             }
         }
         // (scalars / unsupported top-level nodes are skipped)
@@ -292,6 +296,12 @@ impl<'a> Ctx<'a> {
             "boolean" => "boolean".to_string(),
             "null" => "null".to_string(),
             "array" => {
+                // 2020-12 fixed tuple: prefixItems -> [T1, T2, ...]
+                if let Some(prefix) = node.get("prefixItems").and_then(Value::as_array) {
+                    let parts: Vec<String> =
+                        prefix.iter().map(|it| self.render_type(it, view)).collect();
+                    return format!("[{}]", parts.join(", "));
+                }
                 if let Some(items) = node.get("items") {
                     let inner = self.render_type(items, view);
                     if inner.contains('|') {
@@ -343,6 +353,34 @@ pub fn read_type_signature(defs: &Map<String, Value>, prop: &Value) -> String {
         used: BTreeSet::new(),
     };
     ctx.render_type(prop, View::Read)
+}
+
+/// A typed path builder from a collection template, e.g.
+/// `rooms/{roomId}/messages` -> `export const messagesPath = (roomId: string) =>
+/// \`rooms/${roomId}/messages\`;`. The const is named after the trailing
+/// collection segment; each `{placeholder}` becomes a typed string argument.
+fn render_path_helper(template: &str) -> String {
+    let mut args: Vec<String> = Vec::new();
+    let mut literal = String::new();
+    for segment in template.split('/') {
+        literal.push('/');
+        if let Some(name) = segment.strip_prefix('{').and_then(|s| s.strip_suffix('}')) {
+            args.push(format!("{name}: string"));
+            literal.push_str(&format!("${{{name}}}"));
+        } else {
+            literal.push_str(segment);
+        }
+    }
+    let literal = literal.trim_start_matches('/');
+    let last = template
+        .rsplit('/')
+        .find(|s| !s.starts_with('{'))
+        .unwrap_or("doc");
+    let const_name = format!("{}Path", lower_first(last));
+    format!(
+        "export const {const_name} = ({}) => `{literal}`;\n\n",
+        args.join(", ")
+    )
 }
 
 /// Lowercase the first character (PascalCase type -> camelCase value name).

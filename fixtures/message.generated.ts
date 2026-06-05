@@ -27,6 +27,8 @@ export interface MessageWrite {
   tags: string[];
 }
 
+export type MessageUpdate = Partial<MessageWrite>;
+
 export type MessageKind = "text" | "image" | "system";
 
 export interface Profile {
@@ -56,4 +58,6 @@ export const messageConverter: FirestoreDataConverter<Message> = {
     return { ...data, id: snapshot.id };
   },
 };
+
+export const messagesPath = (roomId: string) => `rooms/${roomId}/messages`;
 
