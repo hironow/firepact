@@ -35,14 +35,21 @@ gate**.
   `firepact emit` projects a contract bundle into read/write TypeScript;
   `firepact compat` is the compatibility gate.
 - `firepact` (Python package): imports your Pydantic models, delegates schema
-  generation to Pydantic, stamps the `x-firestore-*` vocabulary, and pipes the
-  enriched bundle to the Rust core.
+  generation to Pydantic, stamps the `x-firestore-*` vocabulary, and emits via
+  the native core. Console scripts: `firepact-gen` (generate TypeScript, and
+  `--bundle-out` to export the contract bundle), `firepact-compat` (run the gate
+  from a pip install), and `pydantic2ts` (prior-tool-compatible alias).
 
-## Quick start (development)
+## Quick start
 
 ```sh
-just build              # build the Rust core + `firepact` binary
-just test               # run all tests
-just lint               # rust + python lint / type checks
-firepact emit fixtures/message.bundle.json   # contract bundle -> TypeScript
+# as a user (pip install firepact)
+firepact-gen --module pkg.models --output types.ts        # generate TS
+firepact-gen --module pkg.models --bundle-out schemas/v1.json   # export the bundle
+firepact-compat --history schemas --new schemas/v1.json   # gate compatibility
+
+# as a contributor
+just build   # Rust core + `firepact` binary
+just test    # all tests        just lint   # rust + python checks
+just compat  # gate the example contract against schemas/
 ```

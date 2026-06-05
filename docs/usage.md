@@ -96,12 +96,18 @@ await setDoc(doc(db, `${messagesPath(roomId)}/m1`), payload);  // write view, no
 
 ## 4. Gate compatibility (CI)
 
+Export the bundle, then diff it against the committed history:
+
 ```sh
-firepact compat old.json new.json                 # pairwise
-firepact compat --history schemas/ --new new.json # FULL_TRANSITIVE vs every past version
+firepact-gen --module pkg.models --bundle-out schemas/pkg.v2.json
+firepact-compat --history schemas --new schemas/pkg.v2.json   # pip-installed, native
+# (equivalently, the cargo binary: firepact compat --history schemas --new ...)
 ```
 
-Exit code is non-zero on any breaking change. See [compatibility.md](compatibility.md).
+Both forms exist: `firepact-compat` (Python console script, ships in the wheel)
+and `firepact compat` (the Rust binary). Pairwise `<old.json> <new.json>` also
+works. Exit code is non-zero on any breaking change. See
+[compatibility.md](compatibility.md).
 
 ## Tasks
 

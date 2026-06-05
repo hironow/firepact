@@ -72,9 +72,11 @@ ordering.
 ## Distribution
 
 Packaged with maturin: `pip install firepact` ships the native `emit`/`compat`
-plus the `pydantic2ts` (prior-tool drop-in) and `firepact-gen` console scripts
-and the `from firepact import generate_typescript_defs` API (ADR 0003). The pure
-binary is also installable via `cargo install`.
+plus console scripts `firepact-gen` (TypeScript + `--bundle-out`),
+`firepact-compat` (the gate, no cargo binary needed), and `pydantic2ts`
+(prior-tool drop-in), and the `from firepact import generate_typescript_defs` /
+`check_compat` APIs (ADR 0003). The pure binary is also installable via
+`cargo install`.
 
 ## Not included
 
