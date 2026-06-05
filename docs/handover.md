@@ -17,9 +17,17 @@ All phases (0 -> 1 -> 3 -> 2) are implemented and green.
 - **Phase 3**: CI (rust + python 3.11-3.13 + pydantic drift matrix + tsc) and
   Renovate. The 2-layer "snapshot" is the committed golden pair (schema-layer
   `message.bundle.json` + emit-layer `message.generated.ts`), compared in tests.
-- **Phase 2**: tuples (prefixItems), discriminated unions (oneOf), update view
-  (`Partial<Write>`), typed path helpers.
-- Cross-cutting: ADRs 0001-0007, `.semgrep/` skeleton, publish-ready metadata.
+- **Phase 2**: tuples (prefixItems), discriminated unions (oneOf, narrowable),
+  update view (`UpdateData<Write>`), typed path helpers.
+- **Distribution**: the compat gate is exposed to pip installs via PyO3 + the
+  `firepact-compat` console script (not just the cargo binary). `firepact-gen
+  --bundle-out` exports the contract bundle; `schemas/` + `just compat` +
+  a CI compat job gate the example contract.
+- Wire-type coverage: reference, server/plain timestamp, bytes, GeoPoint, enum
+  (open), dict, array, tuple, nested model, discriminated union -- all in the
+  example, golden, and (where runtime-relevant) the e2e.
+- Cross-cutting: ADRs 0001-0007, `.semgrep/` skeleton, publish-ready metadata,
+  `private/PUBLISH_HOWTO.md` (git-ignored local runbook).
 
 `just test` (rust + python) and `just lint` are green; `just test-e2e` passes
 against the running emulator. All commits are Conventional Commits with

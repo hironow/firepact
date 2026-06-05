@@ -73,7 +73,9 @@ The emitter produces, per realtime root `Message`:
 
 - `Message` - the **read** view (`onSnapshot` / `getDoc`).
 - `MessageWrite` - the **write** view (`setDoc`, create payload).
-- `MessageUpdate` = `Partial<MessageWrite>` - the **update** view (`updateDoc`).
+- `MessageUpdate` = `UpdateData<MessageWrite>` - the **update** view
+  (`updateDoc`): optional fields, `FieldValue` (e.g. `increment()`,
+  `serverTimestamp()`), and nested dotted paths.
 - `messageConverter` - a read-oriented `FirestoreDataConverter<Message>` that
   injects the document id on read and strips it on write. Reads go through it;
   **writes use `MessageWrite` directly** (FirestoreDataConverter has a single app

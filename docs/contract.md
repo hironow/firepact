@@ -73,13 +73,24 @@ the compat gate relies on (ADR 0005).
 
 Each realtime root (carrying `x-firestore-collection`) also gets:
 
-- `{Name}Update = Partial<{Name}Write>` - the update view.
+- `{Name}Update = UpdateData<{Name}Write>` - the update view (optional fields +
+  `FieldValue` + nested dotted paths, via firebase's own `UpdateData<T>`).
 - `{name}Converter: FirestoreDataConverter<{Name}>` - read-oriented: injects the
   doc id on read, strips it on write. Writes use `{Name}Write` directly.
 - `{collectionTail}Path(...)` - a typed path builder; each `{placeholder}` in the
   collection template becomes a `string` argument.
 
 A complete example is in [`../examples/chat/generated.ts`](../examples/chat/generated.ts).
+
+## Unions and tuples
+
+- `anyOf` / `oneOf` -> a per-view union (`A | B` read, `AWrite | BWrite` write),
+  branch order normalized for the compat gate.
+- A Pydantic **discriminated union** (`Field(discriminator="kind")`) emits
+  `oneOf` + `discriminator`; each variant carries a `Literal` discriminant, so
+  the generated union **narrows** on that field in TypeScript (no special
+  codegen needed -- structural narrowing).
+- `prefixItems` -> a fixed tuple `[A, B]` (order preserved).
 
 ## Output conventions
 
