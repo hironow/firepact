@@ -21,12 +21,14 @@ gate**.
 
 ## Documentation
 
-[`docs/`](docs/) documents the current implementation:
+[`docs/`](docs/) documents the current implementation. Start with
+[**what firepact is and is not**](docs/scope.md) (the guarantee boundary), then
 [architecture](docs/architecture.md), [usage](docs/usage.md),
 [contract & projection](docs/contract.md), and the
 [compatibility gate](docs/compatibility.md). Decisions are in
 [`docs/adr/`](docs/adr/); current status is in [`docs/handover.md`](docs/handover.md).
-[`docs/design.md`](docs/design.md) and [`docs/handoff.md`](docs/handoff.md) are
+[`docs/history/design.md`](docs/history/design.md) and
+[`docs/history/handoff.md`](docs/history/handoff.md) are
 the original design/handoff seed documents (historical context, not the live
 status).
 
