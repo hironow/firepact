@@ -5,6 +5,41 @@ use firepact_core::emit;
 use serde_json::json;
 
 #[test]
+fn type_array_renders_as_a_union() {
+    // union_format='primitive_type_array': {"type": ["string","integer"]} -> union
+    let ts = emit(&json!({
+        "$defs": { "Doc": {
+            "type": "object",
+            "properties": { "x": { "type": ["string", "integer"] } },
+            "required": ["x"]
+        }}
+    }));
+    assert!(ts.contains("x?: string | number;"), "read union:\n{ts}");
+    assert!(ts.contains("x: string | number;"), "write union:\n{ts}");
+}
+
+#[test]
+fn firestore_type_overrides_prefix_items() {
+    // x-firestore-type is authoritative: a geopoint masks the underlying tuple.
+    let ts = emit(&json!({
+        "$defs": { "Doc": {
+            "type": "object",
+            "properties": { "loc": {
+                "type": "array",
+                "prefixItems": [{ "type": "number" }, { "type": "number" }],
+                "x-firestore-type": "geopoint"
+            }},
+            "required": ["loc"]
+        }}
+    }));
+    assert!(ts.contains("loc?: GeoPoint;"), "geopoint wins:\n{ts}");
+    assert!(
+        !ts.contains("[number, number]"),
+        "tuple must be masked:\n{ts}"
+    );
+}
+
+#[test]
 fn prefix_items_render_as_a_tuple() {
     let ts = emit(&json!({
         "$defs": { "Doc": {
