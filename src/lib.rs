@@ -168,13 +168,7 @@ impl<'a> Ctx<'a> {
             // write = "what must I provide to create a valid doc" = Pydantic required.
             View::Write => !required.contains(key),
             // read: required ONLY if presence is guaranteed across live docs.
-            View::Read => {
-                let guaranteed = prop
-                    .get("x-firestore-presence-guaranteed")
-                    .and_then(Value::as_bool)
-                    .unwrap_or(false);
-                !(required.contains(key) && guaranteed)
-            }
+            View::Read => read_optional(prop, required, key),
         }
     }
 
@@ -327,6 +321,27 @@ impl<'a> Ctx<'a> {
 /// Read-side open-enum tail: lets a string union accept unknown members so a
 /// backend adding/removing enum values never breaks an old front (trap #5).
 const OPEN_ENUM_SUFFIX: &str = " | (string & {})";
+
+/// Whether a field is optional in the read view: required ONLY when presence is
+/// guaranteed across all live docs (`required` ∩ presence-guaranteed). Shared by
+/// the emitter and the compat gate so the two never drift.
+pub fn read_optional(prop: &Value, required: &BTreeSet<&str>, key: &str) -> bool {
+    let guaranteed = prop
+        .get("x-firestore-presence-guaranteed")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    !(required.contains(key) && guaranteed)
+}
+
+/// The read-view TypeScript type of a single field, used as the compat signature.
+/// `defs` is the bundle's `$defs` (needed to resolve `$ref` enum string-ness).
+pub fn read_type_signature(defs: &Map<String, Value>, prop: &Value) -> String {
+    let mut ctx = Ctx {
+        defs,
+        used: BTreeSet::new(),
+    };
+    ctx.render_type(prop, View::Read)
+}
 
 /// Lowercase the first character (PascalCase type -> camelCase value name).
 fn lower_first(name: &str) -> String {
