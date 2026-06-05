@@ -1,0 +1,12 @@
+gitignore: true
+# DESIGN.md / HANDOFF.md are original seed documents (historical context) kept
+# verbatim; everything else is linted.
+ignores:
+  - DESIGN.md
+  - HANDOFF.md
+  - node_modules/**
+  - .venv/**
+  - target/**
+  - dist/**
+  - output/**
+  - private/**

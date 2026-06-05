@@ -73,14 +73,22 @@ compat: build build-ext
 
 # --- Aggregate (Node/e2e recipes are wired in as those layers land) ---
 
+# Lint Markdown (markdownlint-cli2 via bun)
+lint-md:
+    bunx --bun markdownlint-cli2 "**/*.md"
+
+# Format Markdown (markdownlint-cli2 --fix)
+fmt-md:
+    bunx --bun markdownlint-cli2 --fix "**/*.md"
+
 # Run all fast tests
 test: test-rust test-py
 
 # Run all linters / type checks
-lint: lint-rust lint-py
+lint: lint-rust lint-py lint-md
 
 # Format all sources
-fmt: fmt-rust fmt-py
+fmt: fmt-rust fmt-py fmt-md
 
 # Run project-specific semgrep rules (no-op until rules exist under .semgrep/rules/)
 semgrep:
@@ -89,3 +97,13 @@ semgrep:
     else \
         echo "no semgrep rules yet (.semgrep/rules/ empty) - skipping"; \
     fi
+
+# --- Git hooks (prek = j178/prek, a Rust pre-commit) ---
+
+# Install prek-managed git hooks once per clone (pre-commit + pre-push stages)
+install-hooks:
+    uvx prek install --hook-type pre-commit --hook-type pre-push
+
+# Run every prek hook against all files (matches what git invokes)
+pre-commit:
+    uvx prek run --all-files

@@ -1,0 +1,61 @@
+# prek (j178/prek) -- a Rust reimplementation of pre-commit.
+# Install: just install-hooks   (uvx prek install)
+# Run all: just pre-commit      (uvx prek run --all-files)
+minimum_prek_version: "0.3.0"
+
+# Generated / vendored / committed-artifact paths the hooks must not rewrite.
+exclude: |
+  (?x)^(
+    target/|
+    output/|
+    private/|
+    dist/|
+    node_modules/|
+    \.venv/|
+    tests/e2e/frontend/node_modules/|
+    fixtures/|
+    examples/chat/generated\.ts|
+    tests/e2e/frontend/generated\.ts|
+    docs/firestore-support\.md
+  )
+
+repos:
+  # Fast Rust-native builtin hooks (no external repo clone).
+  - repo: builtin
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  # Local hooks delegate to just so the same checks run from the CLI and the hook.
+  - repo: local
+    hooks:
+      - id: just-fmt
+        name: just fmt
+        entry: just fmt
+        language: system
+        pass_filenames: false
+        description: Format Rust (cargo fmt), Python (ruff), Markdown (markdownlint --fix).
+      - id: just-lint
+        name: just lint
+        entry: just lint
+        language: system
+        pass_filenames: false
+        description: Lint Rust (clippy), Python (ruff + mypy), Markdown (markdownlint).
+
+  # pre-push: the slower full test suite.
+  - repo: local
+    hooks:
+      - id: just-test
+        name: just test
+        entry: just test
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        description: Run the fast Rust + Python test suites before pushing.
