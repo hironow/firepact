@@ -24,18 +24,24 @@ _MODULE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*")
 
 
 def find_binary() -> str:
-    """Locate the ``firepact`` Rust binary: env override, PATH, then cargo target."""
+    """Locate the ``firepact`` Rust binary.
+
+    Order: explicit ``FIREPACT_BIN`` override, then the repo-local cargo target
+    (debug before release: the dev default is ``cargo build``), then ``PATH``.
+    The repo-local build is preferred over PATH so an older globally-installed
+    ``firepact`` cannot silently generate stale output during development.
+    """
     override = os.environ.get("FIREPACT_BIN")
     if override:
         return override
-    on_path = shutil.which("firepact")
-    if on_path:
-        return on_path
     repo_root = Path(__file__).resolve().parents[2]
-    for profile in ("release", "debug"):
+    for profile in ("debug", "release"):
         candidate = repo_root / "target" / profile / "firepact"
         if candidate.exists():
             return str(candidate)
+    on_path = shutil.which("firepact")
+    if on_path:
+        return on_path
     msg = "firepact binary not found (set FIREPACT_BIN, add to PATH, or `cargo build`)"
     raise FileNotFoundError(msg)
 
