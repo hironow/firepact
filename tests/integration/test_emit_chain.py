@@ -31,9 +31,12 @@ _DTOS_MODULE = "examples.chat.dtos"
 
 
 def _shared_names() -> list[str]:
-    """The shared set the example derives from the dtos module (`--shared-from`)."""
+    """The shared set the example derives from the dtos module (`--shared-from`):
+    only enums are auto-shared (context-independent), mirroring the CLI."""
     defs = cast("dict[str, Any]", build_plain_bundle(_DTOS_MODULE)["$defs"])
-    return sorted(defs)
+    return sorted(
+        n for n, node in defs.items() if isinstance(node, dict) and "enum" in node
+    )
 
 
 def test_emit_chain_reproduces_typescript_golden() -> None:

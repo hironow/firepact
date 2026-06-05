@@ -249,14 +249,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.shared:
         names = {n for n in args.shared_names.split(",") if n}
         if args.shared_from:
-            # Derive the shared set from the plain module's own output (the types
-            # it defines), so the names come from real Python references -- no hand
-            # -maintained list, and they are guaranteed to exist in --shared.
+            # Derive the shared set from the plain module's own output, so the
+            # names come from real Python references (no hand-maintained list) and
+            # are guaranteed to exist in --shared. Only ENUMS are auto-shared: they
+            # are context-independent, whereas an object can be dual-context (e.g.
+            # a datetime is Timestamp in Firestore but string in the DTO), so it
+            # must keep its own Firestore definition. Share a pure object explicitly
+            # via --shared-names if needed. emit imports only the referenced subset.
             plain_defs = cast(
-                "dict[str, object]",
+                "dict[str, Any]",
                 build_plain_bundle(args.shared_from).get("$defs", {}),
             )
-            names |= set(plain_defs)  # emit imports only the referenced subset
+            names |= {
+                name
+                for name, node in plain_defs.items()
+                if isinstance(node, dict) and "enum" in node
+            }
         typescript = emit_shared_typescript(bundle, args.shared, sorted(names))
     else:
         typescript = emit_typescript(bundle)

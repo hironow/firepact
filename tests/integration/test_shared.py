@@ -51,5 +51,8 @@ def test_shared_from_derives_names_from_the_module(tmp_path: Path) -> None:
     )
     assert code == 0
     txt = out.read_text(encoding="utf-8")
-    assert 'import type { MessageKind } from "./dtos";' in txt
+    assert 'import type { MessageKind } from "./dtos";' in txt  # enum auto-shared
     assert "export type MessageKind =" not in txt
+    # Only enums are auto-shared: a plain OBJECT defined by the dtos module is
+    # never imported (it may be dual-context), so it is not pulled from ./dtos.
+    assert "SendMessageRequest" not in txt

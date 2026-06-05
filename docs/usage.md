@@ -72,7 +72,10 @@ firepact-gen --module pkg.models --output firestore.ts \
 
 `--shared <module-specifier>` is resolved relative to `--output`; `--shared-from`
 derives the shared names from the plain module's own output (so they are
-guaranteed to exist there). `--shared-names A,B` can add explicit names. The
+guaranteed to exist there). Only **enums** are auto-shared -- they are
+context-independent, whereas an object can be dual-context (a `datetime` is
+`Timestamp` in Firestore but `string` in the DTO), so it keeps its own Firestore
+definition. Share a pure object explicitly with `--shared-names A,B`. The
 [`../examples/chat/`](../examples/chat/) example uses exactly this layout.
 
 Python API:
