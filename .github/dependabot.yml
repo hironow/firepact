@@ -1,0 +1,51 @@
+# Dependabot version updates (first-party; replaces Renovate -- ADR 0013 favours
+# minimizing third-party apps with repo write access). Dependabot security
+# updates are enabled separately in the repo's security settings.
+#
+# Ecosystems in this repo:
+#   github-actions  -> .github/workflows/*.yaml (SHA-pinned actions)
+#   cargo           -> Cargo.toml (pyo3 packaging chain)
+#   uv              -> pyproject.toml + uv.lock (pydantic drives schema output)
+#   npm             -> tests/e2e/frontend (bun.lock; firebase + typescript)
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "cargo"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "python"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  - package-ecosystem: "npm"
+    directory: "/tests/e2e/frontend"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "e2e-frontend"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      e2e-frontend:
+        patterns: ["*"]
