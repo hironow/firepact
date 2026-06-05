@@ -4,9 +4,11 @@ x-firestore-* vocabulary correctly."""
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
+import pytest
 from firepact import build_realtime_bundle
 
 import examples.chat.models  # noqa: F401  (import fires @firestore_realtime)
@@ -24,6 +26,11 @@ def _message_props() -> dict[str, Any]:
     return props
 
 
+@pytest.mark.skipif(
+    bool(os.environ.get("FIREPACT_PYDANTIC_MATRIX")),
+    reason="schema-layer golden is frozen against the locked pydantic; the matrix "
+    "checks semantics + the emit-layer golden (which ignores titles/ordering)",
+)
 def test_bundle_matches_schema_layer_golden() -> None:
     # given
     expected = json.loads(BUNDLE_GOLDEN.read_text(encoding="utf-8"))
