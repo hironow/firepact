@@ -18,10 +18,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-
-import examples.chat.models  # noqa: F401  (import fires @firestore_realtime)
 from firepact import build_realtime_bundle
 from firepact.cli import emit_typescript
+
+import examples.chat.models  # noqa: F401  (import fires @firestore_realtime)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FRONTEND = REPO_ROOT / "tests" / "e2e" / "frontend"
@@ -51,7 +51,9 @@ pytestmark = [
 @pytest.fixture(scope="module")
 def frontend_deps() -> None:
     if not (FRONTEND / "node_modules").exists():
-        subprocess.run(["bun", "install"], cwd=FRONTEND, check=True, capture_output=True)
+        subprocess.run(
+            ["bun", "install"], cwd=FRONTEND, check=True, capture_output=True
+        )
 
 
 @pytest.fixture(scope="module")
@@ -64,7 +66,7 @@ def generated_ts(frontend_deps: None) -> Path:
 @pytest.fixture(scope="module")
 def written_doc() -> Iterator[None]:
     os.environ["FIRESTORE_EMULATOR_HOST"] = f"{EMULATOR_HOST}:{EMULATOR_PORT}"
-    from google.cloud import firestore  # noqa: PLC0415 - heavy, e2e-only dependency
+    from google.cloud import firestore
 
     db = firestore.Client(project=PROJECT)
     # camelCase wire keys (trap #1); doc-id excluded; createdAt via server sentinel.
@@ -78,9 +80,7 @@ def written_doc() -> Iterator[None]:
         "reactions": [{"emoji": "thumbsup", "count": 2}],
         "tags": ["greeting"],
     }
-    ref = (
-        db.collection("rooms").document("r1").collection("messages").document("m1")
-    )
+    ref = db.collection("rooms").document("r1").collection("messages").document("m1")
     ref.set(payload)
     yield
     ref.delete()
