@@ -1,7 +1,7 @@
 """Canonical chat example: the Pydantic models behind the golden fixtures.
 
 Backend write convention is ``model_dump(by_alias=True)`` with a camelCase alias
-generator (DESIGN.md trap #1); the extractor MUST match it.
+generator (docs/history/design.md trap #1); the extractor MUST match it.
 """
 
 from __future__ import annotations

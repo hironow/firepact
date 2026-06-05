@@ -1,6 +1,6 @@
 """Firestore wire-type annotations and the custom JSON Schema generator.
 
-These stamp the ``x-firestore-*`` contract vocabulary (DESIGN.md S4) onto the
+These stamp the ``x-firestore-*`` contract vocabulary (docs/history/design.md S4) onto the
 Pydantic-generated JSON Schema. The base schema is always obtained from the
 handler first, then overridden -- never reconstructed from scratch.
 """

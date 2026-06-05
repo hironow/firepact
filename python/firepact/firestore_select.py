@@ -62,8 +62,9 @@ def registered_roots() -> dict[type[BaseModel], RealtimeSpec]:
 def build_realtime_bundle() -> dict[str, Any]:
     """Assemble the single enriched JSON Schema 2020-12 bundle (the contract artifact).
 
-    ``by_alias=True`` MUST match the backend's write serialization (DESIGN.md
-    trap #1); a mismatch silently makes every field undefined at runtime.
+    ``by_alias=True`` MUST match the backend's write serialization
+    (docs/history/design.md trap #1); a mismatch silently makes every field
+    undefined at runtime.
     """
     roots = list(_REGISTRY)
     keyed = [(model, _SERIALIZATION) for model in roots]
