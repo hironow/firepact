@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Literal
 
 from firepact import (
     FirestoreBackfilled,
@@ -17,7 +17,7 @@ from firepact import (
     FirestoreServerTimestamp,
     firestore_realtime,
 )
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 
@@ -43,9 +43,27 @@ class Reaction(CamelModel):
     count: int
 
 
+class ImageAttachment(CamelModel):
+    kind: Literal["image"]
+    url: str
+    width: int
+
+
+class FileAttachment(CamelModel):
+    kind: Literal["file"]
+    url: str
+    size: int
+
+
+# Tagged (discriminated) union -> oneOf + discriminator; each variant carries a
+# Literal `kind`, so the generated `ImageAttachment | FileAttachment` narrows.
+Attachment = Annotated[ImageAttachment | FileAttachment, Field(discriminator="kind")]
+
+
 @firestore_realtime(collection="rooms/{roomId}/messages", id_field="id")
 class Message(CamelModel):
     id: str
+    attachment: Attachment
     author: Annotated[str, FirestoreRef("Profile")]
     author_profile: Profile
     body: Annotated[str, FirestoreBackfilled()]

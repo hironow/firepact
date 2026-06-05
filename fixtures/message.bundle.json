@@ -1,7 +1,73 @@
 {
   "$defs": {
+    "FileAttachment": {
+      "properties": {
+        "kind": {
+          "const": "file",
+          "title": "Kind",
+          "type": "string"
+        },
+        "size": {
+          "title": "Size",
+          "type": "integer"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "url",
+        "size"
+      ],
+      "title": "FileAttachment",
+      "type": "object"
+    },
+    "ImageAttachment": {
+      "properties": {
+        "kind": {
+          "const": "image",
+          "title": "Kind",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "width": {
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "url",
+        "width"
+      ],
+      "title": "ImageAttachment",
+      "type": "object"
+    },
     "Message": {
       "properties": {
+        "attachment": {
+          "discriminator": {
+            "mapping": {
+              "file": "#/$defs/FileAttachment",
+              "image": "#/$defs/ImageAttachment"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ImageAttachment"
+            },
+            {
+              "$ref": "#/$defs/FileAttachment"
+            }
+          ],
+          "title": "Attachment"
+        },
         "author": {
           "title": "Author",
           "type": "string",
@@ -81,6 +147,7 @@
       },
       "required": [
         "id",
+        "attachment",
         "author",
         "authorProfile",
         "body",

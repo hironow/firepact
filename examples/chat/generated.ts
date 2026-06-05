@@ -3,8 +3,33 @@
 
 import type { DocumentReference, FieldValue, FirestoreDataConverter, GeoPoint, Timestamp, UpdateData } from "firebase/firestore";
 
+export interface FileAttachment {
+  kind?: "file";
+  size?: number;
+  url?: string;
+}
+
+export interface FileAttachmentWrite {
+  kind: "file";
+  size: number;
+  url: string;
+}
+
+export interface ImageAttachment {
+  kind?: "image";
+  url?: string;
+  width?: number;
+}
+
+export interface ImageAttachmentWrite {
+  kind: "image";
+  url: string;
+  width: number;
+}
+
 // @firestore-collection rooms/{roomId}/messages
 export interface Message {
+  attachment?: ImageAttachment | FileAttachment;
   author?: DocumentReference<Profile>;
   authorProfile?: Profile;
   body: string;
@@ -20,6 +45,7 @@ export interface Message {
 }
 
 export interface MessageWrite {
+  attachment: ImageAttachmentWrite | FileAttachmentWrite;
   author: DocumentReference<Profile>;
   authorProfile: ProfileWrite;
   body: string;

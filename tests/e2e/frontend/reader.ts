@@ -79,6 +79,7 @@ const unsubscribe = onSnapshot(
         editedAtIsTimestamp: m.editedAt instanceof Timestamp,
         locationIsGeoPoint: m.location instanceof GeoPoint,
         thumbnailIsBytes: m.thumbnail instanceof Uint8Array,
+        attachmentKind: m.attachment?.kind ?? null,
         tags: m.tags ?? [],
       }),
     );

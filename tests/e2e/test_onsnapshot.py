@@ -72,6 +72,7 @@ def written_doc() -> Iterator[None]:
     db = firestore.Client(project=PROJECT)
     # camelCase wire keys (trap #1); doc-id excluded; createdAt via server sentinel.
     payload: dict[str, Any] = {
+        "attachment": {"kind": "image", "url": "https://x/i.png", "width": 64},
         "author": db.document("profiles/p1"),
         "authorProfile": {"displayName": "Ada", "avatarUrl": None},
         "body": "hello from e2e",
@@ -134,3 +135,4 @@ def test_onsnapshot_reads_written_doc(generated_ts: Path, written_doc: None) -> 
     assert payload["editedAtIsTimestamp"] is True
     assert payload["locationIsGeoPoint"] is True
     assert payload["thumbnailIsBytes"] is True
+    assert payload["attachmentKind"] == "image"

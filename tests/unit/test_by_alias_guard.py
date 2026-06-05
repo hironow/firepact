@@ -11,12 +11,19 @@ from datetime import UTC, datetime
 
 from firepact import build_realtime_bundle
 
-from examples.chat.models import Message, MessageKind, Profile, Reaction
+from examples.chat.models import (
+    ImageAttachment,
+    Message,
+    MessageKind,
+    Profile,
+    Reaction,
+)
 
 
 def _sample_message() -> Message:
     return Message(
         id="m1",
+        attachment=ImageAttachment(kind="image", url="https://x/i.png", width=64),
         author="rooms/r1/profiles/p1",
         author_profile=Profile(display_name="Ada", avatar_url=None),
         body="hello",

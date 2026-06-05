@@ -26,3 +26,19 @@ export const converter = messageConverter;
 export function edit(): MessageUpdate {
   return { body: "edited", createdAt: serverTimestamp() };
 }
+
+// Discriminated union narrows on the literal `kind`: in each branch the
+// variant-specific field (width / size) is accessible. If narrowing failed,
+// tsc would reject `a.width` / `a.size`.
+export function attachmentLabel(m: Message): string {
+  const a = m.attachment;
+  if (a === undefined) return "none";
+  switch (a.kind) {
+    case "image":
+      return `image:${a.width ?? 0}`;
+    case "file":
+      return `file:${a.size ?? 0}`;
+    default:
+      return "unknown";
+  }
+}

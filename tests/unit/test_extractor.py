@@ -111,6 +111,18 @@ def test_all_object_defs_use_camel_case_wire_keys() -> None:
     assert snake == [], f"non-camelCase wire keys (alias drift): {snake}"
 
 
+def test_discriminated_union_is_oneof_with_literal_variants() -> None:
+    # given / when
+    attachment = _message_props()["attachment"]
+    image_kind = _bundle()["$defs"]["ImageAttachment"]["properties"]["kind"]
+
+    # then: Pydantic emits oneOf + discriminator, and each variant carries a
+    # Literal discriminant (const), so the generated union narrows in TS.
+    assert "oneOf" in attachment
+    assert attachment["discriminator"]["propertyName"] == "kind"
+    assert image_kind["const"] == "image"
+
+
 def test_nested_profile_required_is_pinned() -> None:
     # avatar_url is `str | None` with NO default -> required (write view), even
     # though it is nullable. Locks the easy-to-drift required-ness.
