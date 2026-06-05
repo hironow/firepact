@@ -38,6 +38,10 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           python-version: ${{ matrix.python-version }}
+      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
+      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
+      # no account needed. Must precede any uv/pip install.
+      - uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
       - run: uv sync
       - run: cargo build --bin firepact # the binary front-end (py<->rust parity test)
       - run: uv run ruff check .
@@ -63,6 +67,10 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           python-version: "3.12"
+      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
+      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
+      # no account needed. Must precede any uv/pip install.
+      - uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
       - run: uv sync
       - name: Run tests against pydantic ${{ matrix.pydantic }}
         run: uv run --with "pydantic==${{ matrix.pydantic }}" pytest tests/unit tests/integration
@@ -95,6 +103,10 @@ jobs:
         with:
           python-version: "3.13"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
+      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
+      # no account needed. Must precede any uv/pip install.
+      - uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
       - run: uv sync
       - name: Gate the example contract against schemas/ history
         run: just example-compat
@@ -116,6 +128,10 @@ jobs:
           java-version: "21"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       - run: npm install -g firebase-tools
+      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
+      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
+      # no account needed. Must precede any uv/pip install.
+      - uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1.0.1
       - run: uv sync
       - run: bun install
         working-directory: tests/e2e/frontend
