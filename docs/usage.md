@@ -39,7 +39,7 @@ class Message(CamelModel):
 
 Only models decorated with `@firestore_realtime` are roots; their transitive
 closure (nested models, enums) is included automatically. A full worked example
-is in [`../examples/chat/`](../examples/chat/).
+is in [`../examples/gen/chat/`](../examples/gen/chat/).
 
 ## 2. Generate TypeScript
 
@@ -76,7 +76,7 @@ guaranteed to exist there). Only **enums** are auto-shared -- they are
 context-independent, whereas an object can be dual-context (a `datetime` is
 `Timestamp` in Firestore but `string` in the DTO), so it keeps its own Firestore
 definition. Share a pure object explicitly with `--shared-names A,B`. The
-[`../examples/chat/`](../examples/chat/) example uses exactly this layout.
+[`../examples/gen/chat/`](../examples/gen/chat/) example uses exactly this layout.
 
 Python API:
 
@@ -136,5 +136,5 @@ works. Exit code is non-zero on any breaking change. See
 ## Tasks
 
 `just` lists all tasks. Common ones: `just build`, `just test`, `just lint`,
-`just test-e2e` (needs the Firestore emulator + bun), `just example` (regenerate
-`examples/chat/generated.ts`).
+`just test-e2e` (needs the Firestore emulator + bun), `just example-gen` (regenerate
+`examples/gen/chat/generated.ts`).

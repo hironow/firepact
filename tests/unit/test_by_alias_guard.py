@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 
 from firepact import build_realtime_bundle
 
-from examples.chat.models import (
+from examples.gen.chat.models import (
     ImageAttachment,
     Message,
     MessageKind,

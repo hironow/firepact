@@ -21,7 +21,7 @@ All phases (0 -> 1 -> 3 -> 2) are implemented and green.
   update view (`UpdateData<Write>`), typed path helpers.
 - **Distribution**: the compat gate is exposed to pip installs via PyO3 + the
   `firepact-compat` console script (not just the cargo binary). `firepact-gen
-  --bundle-out` exports the contract bundle; `schemas/` + `just compat` +
+  --bundle-out` exports the contract bundle; `schemas/` + `just example-compat` +
   a CI compat job gate the example contract.
 - Wire-type coverage: ALL Firestore value types -- string, number, boolean,
   null, map, array, timestamp (server/plain), GeoPoint, bytes (`Bytes`),
@@ -94,9 +94,9 @@ processes.
 
 - `src/lib.rs` - emitter + shared projection + PyO3 binding; `src/compat.rs` - gate.
 - `src/main.rs` - CLI (`emit`, `compat`).
-- `python/firepact/` - extractor; `examples/chat/models.py` - example models.
+- `python/firepact/` - extractor; `examples/gen/chat/models.py` - example models.
 - `tests/` - golden, cli, open_enum, converter, compat, emit_phase2 (rust);
   unit/integration/e2e (python).
 - `docs/` - live docs of the current system: `architecture.md`, `usage.md`,
   `contract.md`, `compatibility.md` (the "what"); `docs/adr/0001-0007` - the "why".
-- `just test` / `just lint` / `just test-e2e` / `just build-ext` / `just example`.
+- `just test` / `just lint` / `just test-e2e` / `just build-ext` / `just example-gen`.

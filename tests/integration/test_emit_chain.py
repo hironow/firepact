@@ -20,14 +20,14 @@ from firepact.cli import (
     emit_typescript,
 )
 
-import examples.chat.models  # noqa: F401  (import fires @firestore_realtime)
+import examples.gen.chat.models  # noqa: F401  (import fires @firestore_realtime)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TS_GOLDEN = REPO_ROOT / "fixtures" / "message.generated.ts"
-EXAMPLE_TS = REPO_ROOT / "examples" / "chat" / "generated.ts"
-EXAMPLE_DTOS = REPO_ROOT / "examples" / "chat" / "dtos.ts"
+EXAMPLE_TS = REPO_ROOT / "examples" / "gen" / "chat" / "generated.ts"
+EXAMPLE_DTOS = REPO_ROOT / "examples" / "gen" / "chat" / "dtos.ts"
 
-_DTOS_MODULE = "examples.chat.dtos"
+_DTOS_MODULE = "examples.gen.chat.dtos"
 
 
 def _shared_names() -> list[str]:
@@ -68,4 +68,4 @@ def test_example_shares_messagekind_not_redefines_it() -> None:
 
 
 def test_cli_module_path_produces_same_bundle() -> None:
-    assert bundle_for_module("examples.chat.models") == build_realtime_bundle()
+    assert bundle_for_module("examples.gen.chat.models") == build_realtime_bundle()

@@ -41,7 +41,9 @@ def test_plain_emit_maps_datetime_to_string() -> None:
 
 def test_build_plain_bundle_collects_module_models() -> None:
     # given / when: the example module defines Message/Profile/Reaction/MessageKind
-    defs = cast("dict[str, Any]", build_plain_bundle("examples.chat.models")["$defs"])
+    defs = cast(
+        "dict[str, Any]", build_plain_bundle("examples.gen.chat.models")["$defs"]
+    )
 
     # then: every model defined in the module is present (not just realtime roots)
     for name in ("Message", "Profile", "Reaction", "MessageKind"):

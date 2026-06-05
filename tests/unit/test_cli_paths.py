@@ -36,20 +36,20 @@ def test_find_binary_honors_env_override(monkeypatch: pytest.MonkeyPatch) -> Non
 
 def test_generate_typescript_defs_writes_output(tmp_path: Path) -> None:
     out = tmp_path / "types.ts"
-    ts = generate_typescript_defs("examples.chat.models", output=str(out))
+    ts = generate_typescript_defs("examples.gen.chat.models", output=str(out))
     assert ts == TS_GOLDEN.read_text(encoding="utf-8")
     assert out.read_text(encoding="utf-8") == ts
 
 
 def test_registered_roots_includes_the_example_root() -> None:
-    import examples.chat.models as chat
+    import examples.gen.chat.models as chat
 
     assert chat.Message in registered_roots()
 
 
 def test_main_with_output_matches_golden(tmp_path: Path) -> None:
     out = tmp_path / "types.ts"
-    code = cli_mod.main(["--module", "examples.chat.models", "--output", str(out)])
+    code = cli_mod.main(["--module", "examples.gen.chat.models", "--output", str(out)])
     assert code == 0
     assert out.read_text(encoding="utf-8") == TS_GOLDEN.read_text(encoding="utf-8")
 

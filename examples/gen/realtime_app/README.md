@@ -86,11 +86,11 @@ Pydantic -- it was added in v1, so a residual v0 document genuinely lacks it
 
 ```sh
 just example   # regenerates both examples; for this one:
-firepact-gen --plain --module examples.realtime_app.dtos \
-  --output examples/realtime_app/dtos.ts
-firepact-gen --module examples.realtime_app._fp_roots \
-  --output examples/realtime_app/firestore.ts \
-  --shared ./dtos --shared-from examples.realtime_app.dtos
+firepact-gen --plain --module examples.gen.realtime_app.dtos \
+  --output examples/gen/realtime_app/dtos.ts
+firepact-gen --module examples.gen.realtime_app._fp_roots \
+  --output examples/gen/realtime_app/firestore.ts \
+  --shared ./dtos --shared-from examples.gen.realtime_app.dtos
 ```
 
 `tests/integration/test_realtime_example.py` keeps the outputs from drifting.

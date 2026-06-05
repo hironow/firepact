@@ -46,12 +46,12 @@ never confused because they are different generated types.
 ```sh
 just example
 # which runs:
-firepact-gen --plain --module examples.chat.dtos --output examples/chat/dtos.ts
-firepact-gen --module examples.chat.models --output examples/chat/generated.ts \
-  --shared ./dtos --shared-from examples.chat.dtos
+firepact-gen --plain --module examples.gen.chat.dtos --output examples/gen/chat/dtos.ts
+firepact-gen --module examples.gen.chat.models --output examples/gen/chat/generated.ts \
+  --shared ./dtos --shared-from examples.gen.chat.dtos
 ```
 
-`--shared-from examples.chat.dtos` derives the shared names from the dtos module's
+`--shared-from examples.gen.chat.dtos` derives the shared names from the dtos module's
 own output (the types it defines), so there is no hand-maintained list and the
 imported names are guaranteed to exist in `dtos.ts`; firepact imports only the
 ones the Firestore docs actually reference.

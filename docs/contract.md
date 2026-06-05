@@ -92,7 +92,7 @@ Each realtime root (carrying `x-firestore-collection`) also gets:
 - `{collectionTail}Path(...)` - a typed path builder; each `{placeholder}` in the
   collection template becomes a `string` argument.
 
-A complete example is in [`../examples/chat/generated.ts`](../examples/chat/generated.ts).
+A complete example is in [`../examples/gen/chat/generated.ts`](../examples/gen/chat/generated.ts).
 
 ## Unions and tuples
 

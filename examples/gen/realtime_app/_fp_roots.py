@@ -3,7 +3,7 @@ WITHOUT modifying them.
 
 ``firestore_realtime`` is applied as a plain function (not a decorator on the
 class), so ``repo.py`` carries no firepact import and firepact stays a dev/gen
--only dependency. ``firepact-gen --module examples.realtime_app._fp_roots`` emits
+-only dependency. ``firepact-gen --module examples.gen.realtime_app._fp_roots`` emits
 every registered root into one ``firestore.ts``.
 
 ``guaranteed`` lists the fields present since each collection's first version

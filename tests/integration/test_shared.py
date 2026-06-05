@@ -40,13 +40,13 @@ def test_shared_from_derives_names_from_the_module(tmp_path: Path) -> None:
     code = main(
         [
             "--module",
-            "examples.chat.models",
+            "examples.gen.chat.models",
             "--output",
             str(out),
             "--shared",
             "./dtos",
             "--shared-from",
-            "examples.chat.dtos",
+            "examples.gen.chat.dtos",
         ]
     )
     assert code == 0

@@ -18,11 +18,11 @@ from firepact.cli import (
 from firepact.firestore_select import _REGISTRY
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FIRESTORE_TS = REPO_ROOT / "examples" / "realtime_app" / "firestore.ts"
-DTOS_TS = REPO_ROOT / "examples" / "realtime_app" / "dtos.ts"
+FIRESTORE_TS = REPO_ROOT / "examples" / "gen" / "realtime_app" / "firestore.ts"
+DTOS_TS = REPO_ROOT / "examples" / "gen" / "realtime_app" / "dtos.ts"
 
-_ROOTS_MODULE = "examples.realtime_app._fp_roots"
-_DTOS_MODULE = "examples.realtime_app.dtos"
+_ROOTS_MODULE = "examples.gen.realtime_app._fp_roots"
+_DTOS_MODULE = "examples.gen.realtime_app.dtos"
 
 
 def _shared_names() -> list[str]:

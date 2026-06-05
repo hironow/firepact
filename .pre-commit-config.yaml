@@ -14,10 +14,10 @@ exclude: |
     \.venv/|
     tests/e2e/frontend/node_modules/|
     fixtures/|
-    examples/chat/generated\.ts|
-    examples/chat/dtos\.ts|
-    examples/realtime_app/firestore\.ts|
-    examples/realtime_app/dtos\.ts|
+    examples/gen/chat/generated\.ts|
+    examples/gen/chat/dtos\.ts|
+    examples/gen/realtime_app/firestore\.ts|
+    examples/gen/realtime_app/dtos\.ts|
     tests/e2e/frontend/generated\.ts|
     docs/firestore-support\.md
   )

@@ -22,7 +22,7 @@ import pytest
 from firepact import build_realtime_bundle
 from firepact.cli import emit_typescript
 
-import examples.chat.models  # noqa: F401  (import fires @firestore_realtime)
+import examples.gen.chat.models  # noqa: F401  (import fires @firestore_realtime)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FRONTEND = REPO_ROOT / "tests" / "e2e" / "frontend"

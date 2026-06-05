@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 from firepact import build_realtime_bundle
 
-import examples.chat.models  # noqa: F401  (import fires @firestore_realtime)
+import examples.gen.chat.models  # noqa: F401  (import fires @firestore_realtime)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BUNDLE_GOLDEN = REPO_ROOT / "fixtures" / "message.bundle.json"

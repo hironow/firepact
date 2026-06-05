@@ -1,6 +1,6 @@
 # schemas/
 
-Versioned history of the **contract bundle** for the `examples/chat` models -
+Versioned history of the **contract bundle** for the `examples/gen/chat` models -
 one committed file per published release. This is what the FULL_TRANSITIVE
 compatibility gate diffs against; in a real project, point it at your own models.
 

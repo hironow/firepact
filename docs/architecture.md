@@ -48,7 +48,7 @@ thing to compare and the projection rules live in one place (ADR 0002).
 
 The fixture pair is the worked example of the artifact:
 `fixtures/message.bundle.json` (the bundle) and `fixtures/message.generated.ts`
-(its emitted TypeScript). `examples/chat/` is the same pair with the source
+(its emitted TypeScript). `examples/gen/chat/` is the same pair with the source
 `models.py`.
 
 ## Data flow (Phase 0 path)
@@ -94,5 +94,5 @@ A general multi-dialect JSON Schema compiler (ADR 0007) and OpenTelemetry
 | `python/firepact/firestore_schema.py` | annotations + `FirestoreJsonSchema` |
 | `python/firepact/firestore_select.py` | `@firestore_realtime` + `build_realtime_bundle` |
 | `python/firepact/cli.py` | CLI / native-emit wrapper / `generate_typescript_defs` |
-| `examples/chat/` | worked example (`models.py` -> `generated.ts`) |
+| `examples/gen/chat/` | worked example (`models.py` -> `generated.ts`) |
 | `fixtures/` | canonical contract artifact (bundle + generated TS goldens) |

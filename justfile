@@ -57,11 +57,11 @@ fmt-py:
 #                   firestore.ts, and a dual-context embedded type. Both layer the
 #                   plain DTO file (the single source for shared enums) under the
 #                   Firestore file via --shared-from (names derived, not listed).
-example: build-ext
-    uv run firepact-gen --plain --module examples.chat.dtos --output examples/chat/dtos.ts
-    uv run firepact-gen --module examples.chat.models --output examples/chat/generated.ts --shared ./dtos --shared-from examples.chat.dtos
-    uv run firepact-gen --plain --module examples.realtime_app.dtos --output examples/realtime_app/dtos.ts
-    uv run firepact-gen --module examples.realtime_app._fp_roots --output examples/realtime_app/firestore.ts --shared ./dtos --shared-from examples.realtime_app.dtos
+example-gen: build-ext
+    uv run firepact-gen --plain --module examples.gen.chat.dtos --output examples/gen/chat/dtos.ts
+    uv run firepact-gen --module examples.gen.chat.models --output examples/gen/chat/generated.ts --shared ./dtos --shared-from examples.gen.chat.dtos
+    uv run firepact-gen --plain --module examples.gen.realtime_app.dtos --output examples/gen/realtime_app/dtos.ts
+    uv run firepact-gen --module examples.gen.realtime_app._fp_roots --output examples/gen/realtime_app/firestore.ts --shared ./dtos --shared-from examples.gen.realtime_app.dtos
 
 # Regenerate the Firestore support matrix doc from the emitter
 gen-docs: build
@@ -76,9 +76,9 @@ test-e2e: build build-ext
 # --- Compatibility gate (FULL_TRANSITIVE) ---
 
 # Diff the example's current contract bundle against the committed schemas/ history
-compat: build build-ext
+example-compat: build build-ext
     mkdir -p output
-    uv run firepact-gen --module examples.chat.models --bundle-out output/message.bundle.json
+    uv run firepact-gen --module examples.gen.chat.models --bundle-out output/message.bundle.json
     ./target/debug/firepact compat --history schemas --new output/message.bundle.json
 
 # --- Aggregate (Node/e2e recipes are wired in as those layers land) ---
