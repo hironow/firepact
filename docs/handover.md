@@ -45,9 +45,13 @@ structural/behavioral separated.
 
 ## In Progress
 
-Nothing. **v0.1.7 is published** to PyPI (`firepact`) and crates.io
-(`firepact-core`) via the OIDC trusted-publishing workflow (ADR 0013), with PEP 740
-publish attestations (PyPI) and SLSA build provenance (GitHub) verified.
+**Releasing v0.1.8** (tag `v0.1.8` once main CI is green). v0.1.7 is already
+published to PyPI (`firepact`) and crates.io (`firepact-core`) via the OIDC
+trusted-publishing workflow (ADR 0013), with PEP 740 attestations (PyPI) + SLSA
+provenance (GitHub) verified. v0.1.8 is the first release carrying: abi3 wheels
+(one per platform, 3.11+), the rewritten descriptions / keywords / topics / README,
+the docs reorg (seed docs -> `history/`, new `scope.md`), and semgrep registry-pack
+coverage (python/rust/typescript). `__version__` now derives from package metadata.
 
 ## Next Actions
 
