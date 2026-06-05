@@ -1,5 +1,7 @@
+use firepact_core::compat::{diff, is_breaking, Finding};
 use firepact_core::emit;
 use std::io::Read;
+use std::path::PathBuf;
 use std::process::exit;
 
 fn main() {
@@ -60,8 +62,106 @@ fn cmd_emit(args: &[String]) -> i32 {
     0
 }
 
-fn cmd_compat(_args: &[String]) -> i32 {
-    // Implemented in Phase 1 (the FULL_TRANSITIVE compatibility gate).
-    eprintln!("compat: not implemented yet");
-    3
+fn load_json(path: &str) -> Result<serde_json::Value, String> {
+    let raw = std::fs::read_to_string(path).map_err(|e| format!("read {path}: {e}"))?;
+    serde_json::from_str(&raw).map_err(|e| format!("parse {path}: {e}"))
+}
+
+/// All `*.json` files in `dir`, sorted by name (deterministic order).
+fn history_files(dir: &str) -> Result<Vec<PathBuf>, String> {
+    let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
+        .map_err(|e| format!("read dir {dir}: {e}"))?
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("json"))
+        .collect();
+    files.sort();
+    Ok(files)
+}
+
+fn report(label: &str, findings: &[Finding]) {
+    for f in findings {
+        eprintln!("[{label}] {}", f.report_line());
+    }
+}
+
+fn cmd_compat(args: &[String]) -> i32 {
+    // Form A: compat <old.json> <new.json>
+    // Form B: compat --history <dir> --new <file>   (FULL_TRANSITIVE)
+    if let (Some(dir), Some(new_path)) = (flag(args, "--history"), flag(args, "--new")) {
+        return cmd_compat_history(&dir, &new_path);
+    }
+    let positionals: Vec<&String> = args.iter().filter(|a| !a.starts_with("--")).collect();
+    if positionals.len() != 2 {
+        eprintln!("compat: expected <old.json> <new.json> or --history <dir> --new <file>");
+        return 2;
+    }
+    let (old, new) = match (load_json(positionals[0]), load_json(positionals[1])) {
+        (Ok(o), Ok(n)) => (o, n),
+        (Err(e), _) | (_, Err(e)) => {
+            eprintln!("{e}");
+            return 1;
+        }
+    };
+    let findings = diff(&old, &new);
+    report("compat", &findings);
+    if is_breaking(&findings) {
+        eprintln!("compat: BREAKING changes detected");
+        1
+    } else {
+        eprintln!("compat: compatible");
+        0
+    }
+}
+
+/// FULL_TRANSITIVE: diff the new bundle against every past version. Any version
+/// it would break is a failure (any generation of doc may still be live).
+fn cmd_compat_history(dir: &str, new_path: &str) -> i32 {
+    let new = match load_json(new_path) {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("{e}");
+            return 1;
+        }
+    };
+    let files = match history_files(dir) {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("{e}");
+            return 1;
+        }
+    };
+    let mut any_breaking = false;
+    for past in &files {
+        let label = past
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("<version>");
+        let past_bundle = match load_json(&past.to_string_lossy()) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("{e}");
+                return 1;
+            }
+        };
+        let findings = diff(&past_bundle, &new);
+        report(label, &findings);
+        any_breaking |= is_breaking(&findings);
+    }
+    if any_breaking {
+        eprintln!("compat: BREAKING against at least one past version");
+        1
+    } else {
+        eprintln!(
+            "compat: compatible with all {} past version(s)",
+            files.len()
+        );
+        0
+    }
+}
+
+/// Value following `name` in the argument list, if present.
+fn flag(args: &[String], name: &str) -> Option<String> {
+    let idx = args.iter().position(|a| a == name)?;
+    args.get(idx + 1).cloned()
 }

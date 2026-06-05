@@ -4,6 +4,8 @@
 use serde_json::{Map, Value};
 use std::collections::BTreeSet;
 
+pub mod compat;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum View {
     Read,
