@@ -45,9 +45,12 @@ Nothing. Awaiting requester review / publish decision.
 
 ## Next Actions
 
-1. Owner: reserve names and publish when ready (crates.io `firepact-core`, PyPI
-   `firepact`, GitHub) -- metadata is complete; this needs the owner's credentials
-   and is an outward-facing action (not done automatically).
+1. Owner: do the one-time release bootstrap, then publish by pushing a `v*` tag.
+   Release is OIDC Trusted Publishing with no long-lived token (ADR 0013,
+   `.github/workflows/release.yaml`). The bootstrap (GitHub `release` environment +
+   `v*` tag ruleset + default-token read-only; PyPI pending publisher; crates.io
+   one-time disposable token then enforce TP) is outward-facing repo/registry setup
+   the owner must do once -- the full step-by-step is `private/PUBLISH_HOWTO.md`.
 2. Optionally: start committing released bundles under `schemas/v*.json` and wire
    `firepact compat --history schemas --new <new>` into CI to begin enforcing the
    gate against real history.
