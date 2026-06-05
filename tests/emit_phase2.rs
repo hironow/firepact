@@ -19,6 +19,24 @@ fn type_array_renders_as_a_union() {
 }
 
 #[test]
+fn reference_without_target_falls_back_to_document_data() {
+    // The one Firestore branch not reachable through the extractor (FirestoreRef
+    // always carries a target): a reference with no x-firestore-ref-target.
+    let ts = emit(&json!({
+        "$defs": { "Doc": {
+            "type": "object",
+            "properties": { "ref": { "type": "string", "x-firestore-type": "reference" } },
+            "required": ["ref"]
+        }}
+    }));
+    assert!(
+        ts.contains("ref?: DocumentReference<DocumentData>;"),
+        "fallback:\n{ts}"
+    );
+    assert!(ts.contains("DocumentData"), "DocumentData import:\n{ts}");
+}
+
+#[test]
 fn firestore_type_overrides_prefix_items() {
     // x-firestore-type is authoritative: a geopoint masks the underlying tuple.
     let ts = emit(&json!({
