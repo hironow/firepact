@@ -1,6 +1,6 @@
 [project]
 name = "firepact"
-version = "0.1.6"
+version = "0.1.7"
 description = "Firestore-aware Pydantic -> TypeScript contract generator with a FULL_TRANSITIVE compatibility gate."
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
@@ -44,8 +44,9 @@ e2e = [
 ]
 
 # maturin builds the PyO3 extension (firepact._core) alongside the pure-Python
-# layer under python/. The Python code falls back to the `firepact` subprocess
-# when the native module is absent (e.g. a non-maturin dev checkout).
+# layer under python/. The Python package reaches the Rust engine ONLY through
+# _core (no subprocess fallback); the standalone `firepact` binary is a separate
+# CLI / dev-and-test tool (ADR 0012).
 [build-system]
 requires = ["maturin>=1.7,<2"]
 build-backend = "maturin"

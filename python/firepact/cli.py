@@ -1,8 +1,9 @@
 """Command-line entry point: import models, build the bundle, emit TypeScript.
 
-Phase 0 pipes the enriched bundle to the cargo-built ``firepact`` binary over
-stdin (no temp file). Phase 0e replaces this subprocess hop with a PyO3-native
-call while keeping this CLI surface stable.
+The engine is the Rust core. The Python package reaches it ONLY through the
+native PyO3 module ``firepact._core`` (built into the wheel by maturin); there is
+no subprocess fallback. The standalone ``firepact`` cargo binary is a separate
+CLI / dev-and-test tool (see ADR 0012), not part of this runtime path.
 """
 
 from __future__ import annotations
@@ -13,7 +14,6 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any, cast
@@ -28,12 +28,12 @@ _PAIRWISE_ARGC = 2
 
 
 def find_binary() -> str:
-    """Locate the ``firepact`` Rust binary.
+    """Locate the standalone ``firepact`` Rust binary.
 
-    Order: explicit ``FIREPACT_BIN`` override, then the repo-local cargo target
-    (debug before release: the dev default is ``cargo build``), then ``PATH``.
-    The repo-local build is preferred over PATH so an older globally-installed
-    ``firepact`` cannot silently generate stale output during development.
+    For **tests and dev tooling only** (the py/rust parity test, and anything that
+    drives the standalone CLI); the Python runtime never calls the binary (ADR
+    0012). Order: ``FIREPACT_BIN`` override, then the repo-local cargo target
+    (debug before release), then ``PATH``.
     """
     override = os.environ.get("FIREPACT_BIN")
     if override:
@@ -48,6 +48,25 @@ def find_binary() -> str:
         return on_path
     msg = "firepact binary not found (set FIREPACT_BIN, add to PATH, or `cargo build`)"
     raise FileNotFoundError(msg)
+
+
+def _load_core() -> Any:
+    """Import the native engine ``firepact._core`` or raise an actionable error.
+
+    The Python package has no binary fallback (ADR 0012): a missing ``_core`` means
+    the native module was not built, so say how to build it instead of failing
+    obscurely (or silently shelling out to a binary that may be absent).
+    """
+    try:
+        from firepact import _core
+    except ImportError as exc:
+        msg = (
+            "firepact._core (the native engine) is not built. Install the wheel "
+            "(`pip install firepact`) or build it for development "
+            "(`uv sync` / `maturin develop`)."
+        )
+        raise ImportError(msg) from exc
+    return _core
 
 
 def bundle_for_module(module: str) -> dict[str, object]:
@@ -71,23 +90,8 @@ def bundle_for_module(module: str) -> dict[str, object]:
 
 
 def emit_typescript(bundle: dict[str, object]) -> str:
-    """Emit TypeScript from the bundle, preferring the native PyO3 module.
-
-    Falls back to the ``firepact`` binary over stdin when the compiled extension
-    is not present (e.g. a plain ``cargo build`` checkout without maturin).
-    """
-    payload = json.dumps(bundle)
-    try:
-        from firepact import _core
-    except ImportError:
-        result = subprocess.run(
-            [find_binary(), "emit", "-"],
-            input=payload.encode("utf-8"),
-            capture_output=True,
-            check=True,
-        )
-        return result.stdout.decode("utf-8")
-    emitted: str = _core.emit(payload)
+    """Emit TypeScript from the bundle via the native engine (``_core``)."""
+    emitted: str = _load_core().emit(json.dumps(bundle))
     return emitted
 
 
@@ -96,26 +100,9 @@ def emit_shared_typescript(
 ) -> str:
     """Emit TypeScript where ``shared_names`` are imported from ``shared_path``
     (a TS module specifier relative to the output) instead of redefined."""
-    payload = json.dumps(bundle)
-    try:
-        from firepact import _core
-    except ImportError:
-        result = subprocess.run(
-            [
-                find_binary(),
-                "emit",
-                "--shared",
-                shared_path,
-                "--shared-names",
-                ",".join(shared_names),
-                "-",
-            ],
-            input=payload.encode("utf-8"),
-            capture_output=True,
-            check=True,
-        )
-        return result.stdout.decode("utf-8")
-    emitted: str = _core.emit_shared(payload, shared_path, shared_names)
+    emitted: str = _load_core().emit_shared(
+        json.dumps(bundle), shared_path, shared_names
+    )
     return emitted
 
 
@@ -163,19 +150,8 @@ def build_plain_bundle(module: str) -> dict[str, object]:
 
 
 def emit_plain_typescript(bundle: dict[str, object]) -> str:
-    """Emit plain DTO TypeScript, preferring the native module (binary fallback)."""
-    payload = json.dumps(bundle)
-    try:
-        from firepact import _core
-    except ImportError:
-        result = subprocess.run(
-            [find_binary(), "emit", "--plain", "-"],
-            input=payload.encode("utf-8"),
-            capture_output=True,
-            check=True,
-        )
-        return result.stdout.decode("utf-8")
-    emitted: str = _core.emit_plain(payload)
+    """Emit plain DTO TypeScript via the native engine (``_core``)."""
+    emitted: str = _load_core().emit_plain(json.dumps(bundle))
     return emitted
 
 
@@ -289,9 +265,7 @@ def check_compat(old_json: str, new_json: str) -> list[dict[str, Any]]:
     Each finding is ``{"def", "field"|None, "verdict": "SAFE"|"BREAKING",
     "message"}``. Requires the native module (built by maturin / `pip install`).
     """
-    from firepact import _core
-
-    findings: list[dict[str, Any]] = json.loads(_core.compat(old_json, new_json))
+    findings: list[dict[str, Any]] = json.loads(_load_core().compat(old_json, new_json))
     return findings
 
 
@@ -336,10 +310,10 @@ def compat_main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(raw)
 
     try:
-        from firepact import _core  # noqa: F401 - probe the native module
-    except ImportError:
-        # Dev fallback: delegate to the firepact binary (a pip install has _core).
-        return subprocess.run([find_binary(), "compat", *raw], check=False).returncode
+        _load_core()  # native engine only; no binary fallback (ADR 0012)
+    except ImportError as exc:
+        _eprint(str(exc))
+        return 1
 
     if args.history and args.new_path:
         return _compat_history(args.history, args.new_path)

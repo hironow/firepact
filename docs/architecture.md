@@ -58,9 +58,9 @@ The fixture pair is the worked example of the artifact:
 2. `build_realtime_bundle()` calls `models_json_schema(..., by_alias=True)` with
    the custom `FirestoreJsonSchema`, then injects `x-firestore-collection` /
    `x-firestore-doc-id-field` onto roots.
-3. The bundle is emitted to TypeScript via the native `firepact._core.emit`
-   (falling back to the `firepact emit` subprocess when the native module is
-   absent).
+3. The bundle is emitted to TypeScript via the native `firepact._core.emit`.
+   This is the only runtime path: the Python package never shells out to the
+   standalone `firepact` binary (ADR 0012).
 
 ## Determinism
 

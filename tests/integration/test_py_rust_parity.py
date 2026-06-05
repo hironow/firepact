@@ -1,7 +1,8 @@
-"""The native PyO3 module and the cargo binary are two front-ends over the same
-Rust core; `emit_typescript` prefers native and falls back to the binary. These
-tests pin that the two produce **byte-identical** output, so the fallback can
-never silently diverge. Skipped when the native extension is not built."""
+"""The native PyO3 module and the standalone cargo binary are two independent
+front-ends over the same Rust core (the Python runtime uses only the native one
+-- ADR 0012). These tests pin that the two builds produce **byte-identical**
+output for emit / emit_plain / emit_shared / compat, so they can never drift.
+Skipped when either front-end is not built."""
 
 from __future__ import annotations
 

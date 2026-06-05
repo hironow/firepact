@@ -34,6 +34,41 @@ def test_find_binary_honors_env_override(monkeypatch: pytest.MonkeyPatch) -> Non
     assert find_binary() == "/custom/firepact"
 
 
+def test_emit_raises_clearly_when_core_missing_no_binary_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # ADR 0012: no subprocess fallback. A missing native engine must raise an
+    # actionable error -- and must NOT reach for the binary.
+    def _boom() -> Any:
+        msg = "firepact._core (the native engine) is not built."
+        raise ImportError(msg)
+
+    monkeypatch.setattr(cli_mod, "_load_core", _boom)
+    monkeypatch.setattr(
+        cli_mod, "find_binary", lambda: pytest.fail("binary must not be invoked")
+    )
+    with pytest.raises(ImportError, match="native engine"):
+        cli_mod.emit_typescript({"$defs": {}})
+
+
+def test_compat_main_exits_nonzero_when_core_missing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    def _boom() -> Any:
+        msg = "firepact._core (the native engine) is not built."
+        raise ImportError(msg)
+
+    monkeypatch.setattr(cli_mod, "_load_core", _boom)
+    monkeypatch.setattr(
+        cli_mod, "find_binary", lambda: pytest.fail("binary must not be invoked")
+    )
+    old = tmp_path / "old.json"
+    new = tmp_path / "new.json"
+    old.write_text('{"$defs":{}}', encoding="utf-8")
+    new.write_text('{"$defs":{}}', encoding="utf-8")
+    assert cli_mod.compat_main([str(old), str(new)]) == 1
+
+
 def test_generate_typescript_defs_writes_output(tmp_path: Path) -> None:
     out = tmp_path / "types.ts"
     ts = generate_typescript_defs("examples.gen.chat.models", output=str(out))
