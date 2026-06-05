@@ -66,12 +66,13 @@ class Message(CamelModel):
     attachment: Attachment
     author: Annotated[str, FirestoreRef("Profile")]
     author_profile: Profile
-    body: Annotated[str, FirestoreBackfilled()]
+    body: Annotated[str, FirestoreBackfilled(since_version="v1")]  # -> presence-since
     created_at: Annotated[datetime, FirestoreServerTimestamp()]
     edited_at: datetime  # plain (non-server) datetime -> Timestamp / Timestamp | Date
     kind: MessageKind
     location: Annotated[tuple[float, float], FirestoreGeoPoint()]  # -> GeoPoint
     metadata: dict[str, str]
     reactions: list[Reaction]
+    selection: tuple[int, int]  # plain tuple -> [number, number]
     tags: list[str]
     thumbnail: bytes  # -> Uint8Array

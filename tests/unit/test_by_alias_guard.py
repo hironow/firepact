@@ -33,6 +33,7 @@ def _sample_message() -> Message:
         location=(35.6, 139.7),
         metadata={"client": "web"},
         reactions=[Reaction(emoji="thumbsup", count=2)],
+        selection=(0, 10),
         tags=["greeting"],
         thumbnail=b"\x01\x02\x03",
     )

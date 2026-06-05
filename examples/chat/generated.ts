@@ -40,6 +40,7 @@ export interface Message {
   location?: GeoPoint;
   metadata?: Record<string, string>;
   reactions?: Reaction[];
+  selection?: [number, number];
   tags?: string[];
   thumbnail?: Uint8Array;
 }
@@ -55,6 +56,7 @@ export interface MessageWrite {
   location: GeoPoint;
   metadata: Record<string, string>;
   reactions: ReactionWrite[];
+  selection: [number, number];
   tags: string[];
   thumbnail: Uint8Array;
 }

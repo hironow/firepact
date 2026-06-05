@@ -80,7 +80,8 @@
         "body": {
           "title": "Body",
           "type": "string",
-          "x-firestore-presence-guaranteed": true
+          "x-firestore-presence-guaranteed": true,
+          "x-firestore-presence-since": "v1"
         },
         "createdAt": {
           "format": "date-time",
@@ -131,6 +132,20 @@
           "title": "Reactions",
           "type": "array"
         },
+        "selection": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Selection",
+          "type": "array"
+        },
         "tags": {
           "items": {
             "type": "string"
@@ -157,6 +172,7 @@
         "location",
         "metadata",
         "reactions",
+        "selection",
         "tags",
         "thumbnail"
       ],

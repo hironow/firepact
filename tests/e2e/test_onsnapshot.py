@@ -82,6 +82,7 @@ def written_doc() -> Iterator[None]:
         "location": firestore.GeoPoint(35.6, 139.7),
         "metadata": {"client": "web"},
         "reactions": [{"emoji": "thumbsup", "count": 2}],
+        "selection": [0, 10],
         "tags": ["greeting"],
         "thumbnail": b"\x01\x02\x03",
     }
@@ -136,3 +137,4 @@ def test_onsnapshot_reads_written_doc(generated_ts: Path, written_doc: None) -> 
     assert payload["locationIsGeoPoint"] is True
     assert payload["thumbnailIsBytes"] is True
     assert payload["attachmentKind"] == "image"
+    assert payload["selection"] == [0, 10]

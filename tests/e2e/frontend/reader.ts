@@ -80,6 +80,7 @@ const unsubscribe = onSnapshot(
         locationIsGeoPoint: m.location instanceof GeoPoint,
         thumbnailIsBytes: m.thumbnail instanceof Uint8Array,
         attachmentKind: m.attachment?.kind ?? null,
+        selection: m.selection ?? [],
         tags: m.tags ?? [],
       }),
     );

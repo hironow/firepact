@@ -16,7 +16,8 @@ export function summarize(m: Message): string {
   const edited: Timestamp | undefined = m.editedAt; // non-server datetime -> Timestamp
   const loc: GeoPoint | undefined = m.location; // -> GeoPoint
   const bytes: number = m.thumbnail?.byteLength ?? 0; // -> Uint8Array
-  return `${idLen}:${body}:${String(created)}:${kind}:${tagCount}:${reactionCount}:${String(edited)}:${String(loc)}:${bytes}`;
+  const span: number = (m.selection?.[1] ?? 0) - (m.selection?.[0] ?? 0); // tuple [number, number]
+  return `${idLen}:${body}:${String(created)}:${kind}:${tagCount}:${reactionCount}:${String(edited)}:${String(loc)}:${bytes}:${span}`;
 }
 
 // The converter is what makes `id: string` hold at runtime.
