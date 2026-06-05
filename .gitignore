@@ -28,5 +28,8 @@ tests/e2e/frontend/generated.ts
 # Generated artifacts
 output/
 
+# Local-only notes (publish runbooks, credentials context)
+private/
+
 # OS / editor
 .DS_Store
