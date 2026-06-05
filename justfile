@@ -49,6 +49,10 @@ lint-py:
 fmt-py:
     uv run ruff format .
 
+# Regenerate the committed example output (examples/chat/generated.ts)
+example: build-ext
+    uv run firepact-gen --module examples.chat.models --output examples/chat/generated.ts
+
 # --- End-to-end (real Firestore emulator + onSnapshot) ---
 
 # Run the E2E suite (needs the firestore emulator on 127.0.0.1:8080 and bun)
