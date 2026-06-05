@@ -67,6 +67,11 @@ lack a field). Per field:
 - read-required = `required` AND presence-guaranteed; otherwise optional (safe
   side). The read projection (`read_optional` + the read type signature) is
   shared with the compat gate so the two never drift.
+- Presence is granted per-field by `FirestoreBackfilled()`, or per-root from a
+  gen-only module via `@firestore_realtime(..., guaranteed=["field", ...])` for
+  fields present since the collection's first version (so always-present fields
+  are read-required without annotating the production model). A field added later
+  must stay read-optional -- it is not guaranteed on residual documents.
 
 ## Open string enums
 

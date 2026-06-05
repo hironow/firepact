@@ -25,18 +25,30 @@ _SERIALIZATION: Literal["serialization"] = "serialization"
 class RealtimeSpec:
     collection: str
     id_field: str | None = "id"
+    # Wire/property names that are written on every create (present since the
+    # collection's first version), so the read view can treat them as required
+    # rather than the default optional. Use only for fields that have ALWAYS
+    # existed -- a field added later is NOT guaranteed on residual documents.
+    guaranteed: tuple[str, ...] = ()
 
 
 _REGISTRY: dict[type[BaseModel], RealtimeSpec] = {}
 
 
 def firestore_realtime(
-    *, collection: str, id_field: str | None = "id"
+    *,
+    collection: str,
+    id_field: str | None = "id",
+    guaranteed: list[str] | None = None,
 ) -> Callable[[ModelT], ModelT]:
-    """Mark a model as a realtime root subscribed via ``onSnapshot``."""
+    """Mark a model as a realtime root subscribed via ``onSnapshot``.
+
+    ``guaranteed`` lists property names that are always present (read-required);
+    everything else stays read-optional (FULL_TRANSITIVE safe default).
+    """
 
     def deco(cls: ModelT) -> ModelT:
-        _REGISTRY[cls] = RealtimeSpec(collection, id_field)
+        _REGISTRY[cls] = RealtimeSpec(collection, id_field, tuple(guaranteed or ()))
         return cls
 
     return deco
@@ -70,4 +82,10 @@ def build_realtime_bundle() -> dict[str, Any]:
             node["x-firestore-collection"] = spec.collection
             if spec.id_field:
                 node["x-firestore-doc-id-field"] = spec.id_field
+            props: dict[str, Any] = node.get("properties", {})
+            for field in spec.guaranteed:
+                if field not in props:
+                    msg = f"{name}: guaranteed field {field!r} is not a property"
+                    raise ValueError(msg)
+                props[field]["x-firestore-presence-guaranteed"] = True
     return bundle
