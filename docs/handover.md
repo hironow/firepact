@@ -45,13 +45,16 @@ structural/behavioral separated.
 
 ## In Progress
 
-**Releasing v0.1.8** (tag `v0.1.8` once main CI is green). v0.1.7 is already
-published to PyPI (`firepact`) and crates.io (`firepact-core`) via the OIDC
-trusted-publishing workflow (ADR 0013), with PEP 740 attestations (PyPI) + SLSA
-provenance (GitHub) verified. v0.1.8 is the first release carrying: abi3 wheels
-(one per platform, 3.11+), the rewritten descriptions / keywords / topics / README,
-the docs reorg (seed docs -> `history/`, new `scope.md`), and semgrep registry-pack
-coverage (python/rust/typescript). `__version__` now derives from package metadata.
+Nothing. **v0.1.8 is published** to PyPI (`firepact`) and crates.io
+(`firepact-core`) via the OIDC trusted-publishing workflow (ADR 0013), verified by
+a fresh isolated install on both registries (abi3 wheel runs on 3.13; `cargo
+install` builds Python-free; end-to-end emit + compat gate work; PEP 740 attestation
+present). v0.1.8 carried: abi3 wheels (one per platform, 3.11+; 20 wheels -> 5),
+rewritten descriptions / keywords / topics / README, the docs reorg (seed docs ->
+`history/`, new `scope.md`), semgrep registry-pack coverage (python/rust/typescript),
+markdown link checking, and lockfile-drift guards (`cargo test --locked` +
+`uv sync --locked`, the latter requiring a pinned uv + absolute `[tool.uv]
+exclude-newer`; see astral-sh/uv#18775). `__version__` derives from package metadata.
 
 ## Next Actions
 
