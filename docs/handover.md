@@ -15,14 +15,18 @@ All phases (0 -> 1 -> 3 -> 2) are implemented and green.
 - **Phase 1**: `firepact compat` FULL_TRANSITIVE gate. The HANDOFF S5.2 taxonomy
   is a passing test table; two CLI forms (pairwise and `--history`). ADR 0004.
 - **Phase 3**: CI (rust + python 3.11-3.13 + pydantic drift matrix + tsc) and
-  Renovate. The 2-layer "snapshot" is the committed golden pair (schema-layer
+  dependency updates via Dependabot (github-actions, cargo, uv, npm; a 7-day
+  cooldown holds back fresh releases, security updates excepted -- replaced
+  Renovate). The 2-layer "snapshot" is the committed golden pair (schema-layer
   `message.bundle.json` + emit-layer `message.generated.ts`), compared in tests.
 - **Phase 2**: tuples (prefixItems), discriminated unions (oneOf, narrowable),
   update view (`UpdateData<Write>`), typed path helpers.
 - **Distribution**: the compat gate is exposed to pip installs via PyO3 + the
   `firepact-compat` console script (not just the cargo binary). `firepact-gen
   --bundle-out` exports the contract bundle; `examples/compat/schemas/` + `just
-  example-compat` + a CI compat job gate the example contract.
+  example-compat` + a CI compat job gate the example contract. Wheels are abi3
+  (`abi3-py311`): one stable-ABI wheel per platform covers CPython 3.11+, so the
+  release matrix is 5 wheels + sdist (not per-version). pyo3 is on 0.28.
 - Wire-type coverage: ALL Firestore value types -- string, number, boolean,
   null, map, array, timestamp (server/plain), GeoPoint, bytes (`Bytes`),
   reference, and Vector (`VectorValue`) -- plus open enum, tuple, nested model,
@@ -56,8 +60,9 @@ publish attestations (PyPI) and SLSA build provenance (GitHub) verified.
    `firepact compat --history schemas --new <new>` into CI to begin enforcing the
    gate against real history.
 3. Grow `.semgrep/rules/` as patterns recur (candidates listed in its README).
-4. Bump `actions/checkout` to v5 (the v4 SHA runs on Node 20, deprecated; forced to
-   Node 24 from 2026-06-16). Renovate/Dependabot should carry the SHA bumps.
+4. Dependabot carries action-SHA + dependency bumps (7-day cooldown). Review and
+   merge its PRs; prefer merging only releases past the cooldown, and confirm CI is
+   green (the combined-bump run on `main` is the authoritative check).
 
 ## Review pass (codex + 3 review agents)
 
