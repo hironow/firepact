@@ -21,11 +21,15 @@ thing).
 ## Run
 
 ```sh
-just semgrep   # no-op while rules/ is empty
+just semgrep
 ```
 
-`just semgrep` runs `semgrep --config .semgrep/rules/ --error` once any rule
-exists, and is wired into CI.
+`just semgrep` runs the registry language packs `p/python`, `p/rust`, and
+`p/typescript` (so there is real coverage even before any project rule exists),
+plus `--config .semgrep/rules/` when this directory has rules. Findings fail
+(`--error`); telemetry is off (`--metrics off`). It is wired into CI. Suppress a
+verified false positive with an inline `// nosemgrep: <rule-id>` comment and a
+reason (see `src/main.rs`).
 
 ## When to add a rule
 
@@ -38,5 +42,5 @@ Do **not** add rules for things mypy or ruff already catch.
 ## Candidate rules (not yet codified)
 
 - Forbid `datetime`/`Timestamp` fields typed as `string` in generated TS
-  (`x-firestore-type` is authoritative -- DESIGN S5.1 / ADR 0002).
+  (`x-firestore-type` is authoritative -- docs/history/design.md S5.1 / ADR 0002).
 - Forbid reintroducing a Node dependency in the Rust core (ADR 0003).

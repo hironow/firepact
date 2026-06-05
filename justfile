@@ -104,13 +104,13 @@ lint: lint-rust lint-py lint-md check-links
 # Format all sources
 fmt: fmt-rust fmt-py fmt-md
 
-# Run project-specific semgrep rules (no-op until rules exist under .semgrep/rules/)
+# Run semgrep: registry language packs (py/rust/ts) + any project rules under
+# .semgrep/rules/. Findings fail (--error); telemetry is off (--metrics off).
 semgrep:
-    @if [ -n "$(find .semgrep/rules -name '*.yaml' 2>/dev/null)" ]; then \
-        semgrep --config .semgrep/rules/ --error; \
-    else \
-        echo "no semgrep rules yet (.semgrep/rules/ empty) - skipping"; \
-    fi
+    @rules=""; \
+    if [ -n "$(find .semgrep/rules -name '*.yaml' 2>/dev/null)" ]; then rules="--config .semgrep/rules/"; fi; \
+    semgrep --error --metrics off \
+        --config p/python --config p/rust --config p/typescript $rules
 
 # --- Git hooks (prek = j178/prek, a Rust pre-commit) ---
 

@@ -6,6 +6,9 @@ use std::path::PathBuf;
 use std::process::exit;
 
 fn main() {
+    // Ordinary CLI argument parsing: skip(1) drops argv[0]; the program never
+    // makes a security decision based on the executable path.
+    // nosemgrep: rust.lang.security.args.args
     let args: Vec<String> = std::env::args().skip(1).collect();
     let code = match args.first().map(String::as_str) {
         Some("emit") => cmd_emit(&args[1..]),

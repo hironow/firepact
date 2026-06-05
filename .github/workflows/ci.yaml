@@ -152,12 +152,14 @@ jobs:
       - run: just check-links
 
   semgrep:
-    name: Semgrep (project rules)
+    name: Semgrep (py / rust / ts + project rules)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       - name: Install semgrep
         run: pipx install semgrep
-      - name: Run project semgrep rules (no-op until rules exist)
+      # Registry language packs (p/python, p/rust, p/typescript) + any local rules;
+      # findings fail the job. Needs network to fetch the registry rulesets.
+      - name: Run semgrep
         run: just semgrep
