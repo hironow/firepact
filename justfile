@@ -59,9 +59,9 @@ fmt-py:
 #                   Firestore file via --shared-from (names derived, not listed).
 example-gen: build-ext
     uv run firepact-gen --plain --module examples.gen.chat.dtos --output examples/gen/chat/dtos.ts
-    uv run firepact-gen --module examples.gen.chat.models --output examples/gen/chat/generated.ts --shared ./dtos --shared-from examples.gen.chat.dtos
+    uv run firepact-gen --module examples.gen.chat.models --output examples/gen/chat/generated.ts --bundle-out examples/gen/chat/bundle.json --shared ./dtos --shared-from examples.gen.chat.dtos
     uv run firepact-gen --plain --module examples.gen.realtime_app.dtos --output examples/gen/realtime_app/dtos.ts
-    uv run firepact-gen --module examples.gen.realtime_app._fp_roots --output examples/gen/realtime_app/firestore.ts --shared ./dtos --shared-from examples.gen.realtime_app.dtos
+    uv run firepact-gen --module examples.gen.realtime_app._fp_roots --output examples/gen/realtime_app/firestore.ts --bundle-out examples/gen/realtime_app/bundle.json --shared ./dtos --shared-from examples.gen.realtime_app.dtos
 
 # Regenerate the Firestore support matrix doc from the emitter
 gen-docs: build
@@ -75,11 +75,11 @@ test-e2e: build build-ext
 
 # --- Compatibility gate (FULL_TRANSITIVE) ---
 
-# Diff the example's current contract bundle against the committed schemas/ history
+# Diff the compat example's current bundle against its committed schema history
 example-compat: build build-ext
     mkdir -p output
-    uv run firepact-gen --module examples.gen.chat.models --bundle-out output/message.bundle.json
-    ./target/debug/firepact compat --history schemas --new output/message.bundle.json
+    uv run firepact-gen --module examples.compat.models --bundle-out output/account.bundle.json
+    ./target/debug/firepact compat --history examples/compat/schemas --new output/account.bundle.json
 
 # --- Aggregate (Node/e2e recipes are wired in as those layers land) ---
 

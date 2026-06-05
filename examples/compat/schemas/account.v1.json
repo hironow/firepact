@@ -1,0 +1,47 @@
+{
+  "$defs": {
+    "Account": {
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string",
+          "x-firestore-type": "timestamp"
+        },
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display Name"
+        },
+        "email": {
+          "title": "Email",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "created_at",
+        "version",
+        "email"
+      ],
+      "title": "Account",
+      "type": "object",
+      "x-firestore-collection": "accounts"
+    }
+  }
+}

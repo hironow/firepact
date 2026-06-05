@@ -32,14 +32,18 @@ never confused because they are different generated types.
   Firestore `Timestamp`. `MessageKind` is shared with `Message` and is defined
   here (the plain layer is the single source).
 
-## Outputs (TypeScript)
+## Outputs
 
 - **`dtos.ts`** - generated with `firepact-gen --plain`: one plain interface per
   model, `datetime` -> `string`, strict enums. Defines `MessageKind`.
-- **`generated.ts`** - the Firestore contract: read/write/update views, the read
-  converter (doc-id injection), open string enums, a typed path helper. It
-  **imports** `MessageKind` from `./dtos` (via `--shared-from`) instead of
-  redefining it, so every type is defined exactly once across the two files.
+- **`generated.ts`** - the Firestore contract (TypeScript): read/write/update
+  views, the read converter (doc-id injection), open string enums, a typed path
+  helper. It **imports** `MessageKind` from `./dtos` (via `--shared-from`) instead
+  of redefining it, so every type is defined exactly once across the two files.
+- **`bundle.json`** - the deterministic **contract bundle** (`--bundle-out`): the
+  enriched JSON Schema that both the TypeScript above and the compatibility gate
+  consume. It is the artifact a project freezes as schema history (see
+  [`../../compat/`](../../compat/)).
 
 ## Regenerate
 

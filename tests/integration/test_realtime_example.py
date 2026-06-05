@@ -6,9 +6,12 @@ datetime -> Timestamp / string distinction that is the whole point of firepact."
 from __future__ import annotations
 
 import importlib
+import json
+import os
 from pathlib import Path
 from typing import Any, cast
 
+import pytest
 from firepact.cli import (
     build_plain_bundle,
     bundle_for_module,
@@ -20,6 +23,7 @@ from firepact.firestore_select import _REGISTRY
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIRESTORE_TS = REPO_ROOT / "examples" / "gen" / "realtime_app" / "firestore.ts"
 DTOS_TS = REPO_ROOT / "examples" / "gen" / "realtime_app" / "dtos.ts"
+BUNDLE = REPO_ROOT / "examples" / "gen" / "realtime_app" / "bundle.json"
 
 _ROOTS_MODULE = "examples.gen.realtime_app._fp_roots"
 _DTOS_MODULE = "examples.gen.realtime_app.dtos"
@@ -54,6 +58,16 @@ def test_realtime_dtos_output_is_current() -> None:
 def test_realtime_firestore_output_is_current() -> None:
     actual = emit_shared_typescript(_firestore_bundle(), "./dtos", _shared_names())
     assert FIRESTORE_TS.read_text(encoding="utf-8") == actual
+
+
+@pytest.mark.skipif(
+    bool(os.environ.get("FIREPACT_PYDANTIC_MATRIX")),
+    reason="the exact schema-layer bundle is frozen against the locked pydantic",
+)
+def test_realtime_bundle_is_current() -> None:
+    # The committed contract bundle (--bundle-out) matches the model's bundle.
+    committed = json.loads(BUNDLE.read_text(encoding="utf-8"))
+    assert committed == _firestore_bundle()
 
 
 def test_chatmessage_is_timestamp_in_firestore_string_over_http() -> None:

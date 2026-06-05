@@ -14,6 +14,7 @@ exclude: |
     \.venv/|
     tests/e2e/frontend/node_modules/|
     fixtures/|
+    examples/compat/schemas/|
     examples/gen/chat/generated\.ts|
     examples/gen/chat/dtos\.ts|
     examples/gen/realtime_app/firestore\.ts|

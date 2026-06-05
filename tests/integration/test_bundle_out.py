@@ -1,5 +1,6 @@
-"""`firepact-gen --bundle-out` exports the deterministic contract bundle, which
-is the artifact committed to schemas/ and fed to `firepact compat`."""
+"""`firepact-gen --bundle-out` exports the deterministic contract bundle -- the
+artifact a project commits as schema history and feeds to `firepact compat` (see
+examples/compat/ for a worked history)."""
 
 from __future__ import annotations
 

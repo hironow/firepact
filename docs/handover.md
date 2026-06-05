@@ -21,8 +21,8 @@ All phases (0 -> 1 -> 3 -> 2) are implemented and green.
   update view (`UpdateData<Write>`), typed path helpers.
 - **Distribution**: the compat gate is exposed to pip installs via PyO3 + the
   `firepact-compat` console script (not just the cargo binary). `firepact-gen
-  --bundle-out` exports the contract bundle; `schemas/` + `just example-compat` +
-  a CI compat job gate the example contract.
+  --bundle-out` exports the contract bundle; `examples/compat/schemas/` + `just
+  example-compat` + a CI compat job gate the example contract.
 - Wire-type coverage: ALL Firestore value types -- string, number, boolean,
   null, map, array, timestamp (server/plain), GeoPoint, bytes (`Bytes`),
   reference, and Vector (`VectorValue`) -- plus open enum, tuple, nested model,

@@ -24,8 +24,10 @@ import examples.gen.chat.models  # noqa: F401  (import fires @firestore_realtime
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TS_GOLDEN = REPO_ROOT / "fixtures" / "message.generated.ts"
+BUNDLE_GOLDEN = REPO_ROOT / "fixtures" / "message.bundle.json"
 EXAMPLE_TS = REPO_ROOT / "examples" / "gen" / "chat" / "generated.ts"
 EXAMPLE_DTOS = REPO_ROOT / "examples" / "gen" / "chat" / "dtos.ts"
+EXAMPLE_BUNDLE = REPO_ROOT / "examples" / "gen" / "chat" / "bundle.json"
 
 _DTOS_MODULE = "examples.gen.chat.dtos"
 
@@ -69,3 +71,12 @@ def test_example_shares_messagekind_not_redefines_it() -> None:
 
 def test_cli_module_path_produces_same_bundle() -> None:
     assert bundle_for_module("examples.gen.chat.models") == build_realtime_bundle()
+
+
+def test_example_bundle_matches_fixture_golden() -> None:
+    # The example commits its contract bundle (--bundle-out) alongside the TS; it
+    # is the same artifact as the emit golden's bundle. Static file comparison, so
+    # it is robust across the pydantic matrix (neither file is regenerated here).
+    assert EXAMPLE_BUNDLE.read_text(encoding="utf-8") == BUNDLE_GOLDEN.read_text(
+        encoding="utf-8"
+    )

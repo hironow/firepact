@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "Chat": {
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string",
+          "x-firestore-presence-guaranteed": true,
+          "x-firestore-type": "timestamp"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "x-firestore-presence-guaranteed": true
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/ChatMessage"
+          },
+          "title": "Messages",
+          "type": "array",
+          "x-firestore-presence-guaranteed": true
+        },
+        "status": {
+          "$ref": "#/$defs/ChatStatus",
+          "x-firestore-presence-guaranteed": true
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string",
+          "x-firestore-presence-guaranteed": true,
+          "x-firestore-type": "timestamp"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer",
+          "x-firestore-presence-guaranteed": true
+        }
+      },
+      "required": [
+        "id",
+        "created_at",
+        "updated_at",
+        "version",
+        "status",
+        "messages"
+      ],
+      "title": "Chat",
+      "type": "object",
+      "x-firestore-collection": "users/{userId}/chats"
+    },
+    "ChatMessage": {
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string",
+          "x-firestore-type": "timestamp"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/MessageRole"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "text",
+        "created_at"
+      ],
+      "title": "ChatMessage",
+      "type": "object"
+    },
+    "ChatStatus": {
+      "enum": [
+        "active",
+        "archived"
+      ],
+      "title": "ChatStatus",
+      "type": "string"
+    },
+    "MessageRole": {
+      "enum": [
+        "user",
+        "assistant"
+      ],
+      "title": "MessageRole",
+      "type": "string"
+    },
+    "User": {
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string",
+          "x-firestore-presence-guaranteed": true,
+          "x-firestore-type": "timestamp"
+        },
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display Name"
+        },
+        "handle": {
+          "title": "Handle",
+          "type": "string",
+          "x-firestore-presence-guaranteed": true
+        },
+        "id": {
+          "title": "Id",
+          "type": "string",
+          "x-firestore-presence-guaranteed": true
+        },
+        "plan": {
+          "title": "Plan",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string",
+          "x-firestore-presence-guaranteed": true,
+          "x-firestore-type": "timestamp"
+        },
+        "version": {
+          "title": "Version",
+          "type": "integer",
+          "x-firestore-presence-guaranteed": true
+        }
+      },
+      "required": [
+        "id",
+        "created_at",
+        "updated_at",
+        "version",
+        "handle",
+        "plan"
+      ],
+      "title": "User",
+      "type": "object",
+      "x-firestore-collection": "users"
+    }
+  }
+}

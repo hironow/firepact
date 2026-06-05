@@ -51,9 +51,10 @@ firepact-compat --history schemas --new schemas/v1.json   # gate compatibility
 
 # as a contributor
 just build   # Rust core + `firepact` binary
-just test    # all tests
-just lint    # rust + python + markdown checks
-just compat  # gate the example contract against schemas/
+just test          # all tests
+just lint          # rust + python + markdown checks
+just example-gen   # regenerate the generation examples (examples/gen/)
+just example-compat # gate the compat example against examples/compat/schemas/
 ```
 
 ## Supported versions

@@ -74,7 +74,8 @@ cp output/current.json schemas/pkg.vN.json
 ```
 
 In this repo, [`just example-compat`](../justfile) runs exactly that for the
-`examples/gen/chat` models against [`../schemas/`](../schemas/), and the CI `compat`
-job enforces it. Documents written before the oldest committed version fall
+`examples/compat` model against its
+[`../examples/compat/schemas/`](../examples/compat/schemas/) history, and the CI
+`compat` job enforces it. Documents written before the oldest committed version fall
 outside the TRANSITIVE guarantee; rescue individual fields with
 `FirestoreBackfilled`.

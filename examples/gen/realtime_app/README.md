@@ -74,6 +74,10 @@ Only context-independent types -- the enums -- are imported across the files.
   `datetime` -> `Timestamp` (read) / `Timestamp | Date` (write); read/write/update
   views; read converters. Imports the enums from `./dtos` (via `--shared-from`),
   but keeps its **own** `Timestamp`-typed `ChatMessage`.
+- **`bundle.json`**: the deterministic **contract bundle** (`--bundle-out`) for
+  both roots -- the JSON Schema that the TypeScript and the compatibility gate
+  consume, and the artifact a project freezes as schema history (see
+  [`../../compat/`](../../compat/)).
 
 ### `guaranteed` in action
 
