@@ -53,9 +53,16 @@ repos:
         pass_filenames: false
         description: Lint Rust (clippy), Python (ruff + mypy), Markdown (markdownlint).
 
-  # pre-push: the slower full test suite.
+  # pre-push: strict no-write gate + the slower full test suite.
   - repo: local
     hooks:
+      - id: just-check
+        name: just check
+        entry: just check
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        description: Strict no-write gate (lint + ruff format --check).
       - id: just-test
         name: just test
         entry: just test
