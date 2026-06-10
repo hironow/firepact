@@ -101,6 +101,10 @@ test: test-rust test-py
 # Run all linters / type checks
 lint: lint-rust lint-py lint-md check-links
 
+# Strict gate, no writes: everything `lint` runs plus Python format drift
+check: lint
+    uv run ruff format --check .
+
 # Format all sources
 fmt: fmt-rust fmt-py fmt-md
 
@@ -111,6 +115,40 @@ semgrep:
     if [ -n "$(find .semgrep/rules -name '*.yaml' 2>/dev/null)" ]; then rules="--config .semgrep/rules/"; fi; \
     semgrep --error --metrics off \
         --config p/python --config p/rust --config p/typescript $rules
+
+# --- CI parity (.github/workflows/ci.yaml) ---
+
+# Type-check the frontend consumer against freshly generated types
+# (mirrors the CI frontend-typecheck job)
+frontend-typecheck: build
+    ./target/debug/firepact emit fixtures/message.bundle.json > tests/e2e/frontend/generated.ts
+    cd tests/e2e/frontend && bun install && bunx tsc --noEmit
+
+# Run the E2E suite under a one-shot Firestore emulator -- the exact command
+# the CI e2e job runs (needs firebase-tools and a JVM; fails loud without them)
+test-e2e-emulator:
+    firebase emulators:exec --only firestore --project demo-firepact --config tests/e2e/firebase.json "just test-e2e"
+
+# Pydantic drift canary across supported minor versions (mirrors the CI
+# pydantic-matrix job; the env flag skips the schema-layer exact golden,
+# which is frozen against the locked pydantic)
+pydantic-matrix:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for v in 2.9 2.10 2.11 2.12 2.13; do
+        echo "=== pydantic ${v}.* ==="
+        FIREPACT_PYDANTIC_MATRIX=1 uv run --with "pydantic==${v}.*" pytest tests/unit tests/integration
+    done
+
+# Local parity with the CI workflow: every job except pydantic-matrix
+# (rust+python lint/format/types via check, tests, semgrep, compat gate,
+# frontend tsc, emulator e2e). For the version matrix too, run `just ci-all`.
+ci: check test semgrep example-compat frontend-typecheck test-e2e-emulator
+    @echo "OK: ci parity gate passed"
+
+# Full CI parity including the pydantic version matrix
+ci-all: ci pydantic-matrix
+    @echo "OK: full ci parity passed"
 
 # --- Git hooks (prek = j178/prek, a Rust pre-commit) ---
 
