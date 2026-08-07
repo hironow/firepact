@@ -58,35 +58,57 @@ from pydantic import GetJsonSchemaHandler
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from pydantic_core import core_schema
 
+
 @dataclass(frozen=True)
-class FirestoreRef:                       # Annotated[str, FirestoreRef("Profile")]
+class FirestoreRef:  # Annotated[str, FirestoreRef("Profile")]
     target: str
+
     def __get_pydantic_json_schema__(self, cs, handler) -> JsonSchemaValue:
-        js = handler(cs); js["x-firestore-type"]="reference"; js["x-firestore-ref-target"]=self.target; return js
+        js = handler(cs)
+        js["x-firestore-type"] = "reference"
+        js["x-firestore-ref-target"] = self.target
+        return js
+
 
 @dataclass(frozen=True)
 class FirestoreServerTimestamp:
     def __get_pydantic_json_schema__(self, cs, handler):
-        js = handler(cs); js["x-firestore-type"]="timestamp"; js["x-firestore-server-timestamp"]=True; return js
+        js = handler(cs)
+        js["x-firestore-type"] = "timestamp"
+        js["x-firestore-server-timestamp"] = True
+        return js
+
 
 @dataclass(frozen=True)
 class FirestoreGeoPoint:
     def __get_pydantic_json_schema__(self, cs, handler):
-        js = handler(cs); js["x-firestore-type"]="geopoint"; return js
+        js = handler(cs)
+        js["x-firestore-type"] = "geopoint"
+        return js
+
 
 @dataclass(frozen=True)
-class FirestoreBackfilled:                # read で required 昇格を許可
+class FirestoreBackfilled:  # read で required 昇格を許可
     since_version: str | None = None
+
     def __get_pydantic_json_schema__(self, cs, handler):
-        js = handler(cs); js["x-firestore-presence-guaranteed"]=True
-        if self.since_version: js["x-firestore-presence-since"]=self.since_version
+        js = handler(cs)
+        js["x-firestore-presence-guaranteed"] = True
+        if self.since_version:
+            js["x-firestore-presence-since"] = self.since_version
         return js
+
 
 class FirestoreJsonSchema(GenerateJsonSchema):
     def datetime_schema(self, schema):  # {"type":"string","format":"date-time"} に刻む
-        js = super().datetime_schema(schema); js["x-firestore-type"]="timestamp"; return js
+        js = super().datetime_schema(schema)
+        js["x-firestore-type"] = "timestamp"
+        return js
+
     def bytes_schema(self, schema):
-        js = super().bytes_schema(schema); js["x-firestore-type"]="bytes"; return js
+        js = super().bytes_schema(schema)
+        js["x-firestore-type"] = "bytes"
+        return js
 ```
 
 注意：必ず `handler(cs)` で基底を得てから上書きする。`int`/`float` には刻まない（JSON Schema が `integer`/`number` で区別済み）。
@@ -99,24 +121,31 @@ from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 from .firestore_schema import FirestoreJsonSchema
 
+
 @dataclass(frozen=True)
 class RealtimeSpec:
     collection: str
     id_field: str | None = "id"
 
+
 _REGISTRY: dict[type[BaseModel], RealtimeSpec] = {}
+
 
 def firestore_realtime(*, collection: str, id_field: str | None = "id"):
     def deco(cls):
-        _REGISTRY[cls] = RealtimeSpec(collection, id_field); return cls
+        _REGISTRY[cls] = RealtimeSpec(collection, id_field)
+        return cls
+
     return deco
+
 
 def build_realtime_bundle() -> dict:
     roots = list(_REGISTRY)
     keyed = [(m, "serialization") for m in roots]
     keymap, bundle = models_json_schema(
-        keyed, schema_generator=FirestoreJsonSchema,
-        by_alias=True,                        # ★ §「落とし穴」参照
+        keyed,
+        schema_generator=FirestoreJsonSchema,
+        by_alias=True,  # ★ §「落とし穴」参照
         ref_template="#/$defs/{model}",
     )
     defs = bundle.get("$defs", {})
@@ -125,7 +154,8 @@ def build_realtime_bundle() -> dict:
         node = defs.get(name)
         if node is not None:
             node["x-firestore-collection"] = spec.collection
-            if spec.id_field: node["x-firestore-doc-id-field"] = spec.id_field
+            if spec.id_field:
+                node["x-firestore-doc-id-field"] = spec.id_field
     return bundle
 ```
 
