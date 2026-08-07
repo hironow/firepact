@@ -82,6 +82,7 @@ Python API:
 
 ```python
 from firepact import generate_typescript_defs
+
 ts = generate_typescript_defs("pkg.models", output="types.ts")
 ```
 

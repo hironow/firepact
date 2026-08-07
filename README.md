@@ -38,13 +38,13 @@ from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
 
-class CamelModel(BaseModel):                       # camelCase wire keys
+class CamelModel(BaseModel):  # camelCase wire keys
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
 
 @firestore_realtime(collection="rooms/{roomId}/messages", guaranteed=["body"])
 class Message(CamelModel):
-    id: str                                        # document id
+    id: str  # document id
     body: str
     created_at: Annotated[datetime, FirestoreServerTimestamp()]
     tags: list[str] = []
