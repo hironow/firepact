@@ -67,7 +67,7 @@ features = ["python"]
 # rolling cooldown) moves daily and makes `uv sync --locked` non-deterministic.
 # Bump this date on release; Dependabot's 7-day cooldown handles routine freshness.
 [tool.uv]
-exclude-newer = "2026-08-07T00:00:00Z"
+exclude-newer = "2026-08-14T00:00:00Z"
 
 [tool.ruff.lint]
 # see: https://docs.astral.sh/ruff/rules/
