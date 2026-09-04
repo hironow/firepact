@@ -62,12 +62,24 @@ python-source = "python"
 module-name = "firepact._core"
 features = ["python"]
 
-# Pin an ABSOLUTE dependency cutoff so uv.lock resolves identically on every
-# machine and in CI. A relative exclude-newer-span (e.g. a developer's global
-# rolling cooldown) moves daily and makes `uv sync --locked` non-deterministic.
-# Bump this date on release; Dependabot's 7-day cooldown handles routine freshness.
+# A dependency cooldown: only artifacts uploaded more than seven days ago are
+# resolution candidates, so a compromised-then-yanked release is not pulled in on
+# day zero. It matches the cooldown Dependabot applies in .github/dependabot.yaml.
+#
+# The duration is relative but the resolution is not. uv converts it to an absolute
+# timestamp and records that in uv.lock under [options], and recomputes it only on
+# a new resolution (`uv lock --upgrade`, `--refresh`), never as time passes. So
+# `uv sync --locked` stays reproducible on every machine and in CI.
+#
+# An absolute date lived here before and stranded Dependabot: every
+# `uv lock --upgrade-package` naming a release newer than the pinned day failed to
+# resolve until a human moved the date by hand.
+#
+# To take a release still inside the window, a security fix say, exempt that one
+# package rather than moving the window:
+#   exclude-newer-package = { certifi = false }
 [tool.uv]
-exclude-newer = "2026-08-14T00:00:00Z"
+exclude-newer = "7 days"
 
 [tool.ruff.lint]
 # see: https://docs.astral.sh/ruff/rules/
