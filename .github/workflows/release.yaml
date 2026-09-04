@@ -36,6 +36,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The tag only triggers the run -- crates.io publishes the version in Cargo.toml
+  # and PyPI whatever maturin built from pyproject.toml, and nothing else compares
+  # either against the tag. Without this gate, tagging a version that is already
+  # published skips both publish steps and still reports success. Runs on its own,
+  # so it fails within seconds instead of after the wheel matrix.
+  version-check:
+    name: Tag matches both package versions
+    if: github.repository == 'hironow/firepact'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # ubuntu-latest ships cargo, jq and python3 (>= 3.11, so tomllib is stdlib).
+      # The tag is read from the environment, never interpolated into the script.
+      - name: Tag must match pyproject.toml and Cargo.toml
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          cargo_version="$(cargo metadata --no-deps --format-version 1 \
+            | jq -r '.packages[] | select(.name == "firepact-core") | .version')"
+          py_version="$(python3 -c 'import pathlib, tomllib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
+          echo "tag=${tag}  Cargo.toml=${cargo_version}  pyproject.toml=${py_version}"
+          status=0
+          if [ "${cargo_version}" != "${tag}" ]; then
+            echo "::error::Cargo.toml is ${cargo_version} but the tag is v${tag}"
+            status=1
+          fi
+          if [ "${py_version}" != "${tag}" ]; then
+            echo "::error::pyproject.toml is ${py_version} but the tag is v${tag}"
+            status=1
+          fi
+          exit "${status}"
+
   linux-wheels:
     name: wheels (linux ${{ matrix.target }})
     if: github.repository == 'hironow/firepact'
@@ -125,10 +157,11 @@ jobs:
 
   crates-publish:
     name: Publish firepact-core to crates.io (OIDC)
-    # Linearized so nothing publishes until build + provenance are recorded:
-    #   builds -> provenance -> crates.io -> PyPI (ADR 0013). `provenance` already
-    #   needs all the build jobs, so depending on it gates on the full build too.
-    needs: [provenance]
+    # Linearized so nothing publishes until the tag is checked and build +
+    #   provenance are recorded: version-check + builds -> provenance -> crates.io
+    #   -> PyPI (ADR 0013). `provenance` already needs all the build jobs, so
+    #   depending on it gates on the full build too.
+    needs: [version-check, provenance]
     if: github.repository == 'hironow/firepact'
     runs-on: ubuntu-latest
     environment: release
@@ -160,8 +193,10 @@ jobs:
 
   pypi-publish:
     name: Publish firepact to PyPI (OIDC + PEP 740 attestations)
-    # crates.io first (which already gated on provenance), then PyPI.
-    needs: [crates-publish]
+    # crates.io first (which already gated on provenance), then PyPI. The tag
+    # check is named again rather than inherited, so removing it from one job
+    # cannot silently ungate the other.
+    needs: [version-check, crates-publish]
     if: github.repository == 'hironow/firepact'
     runs-on: ubuntu-latest
     environment: release
