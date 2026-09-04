@@ -175,6 +175,16 @@ git-ignored, so anything recorded only there is not reflected here.
   `tests/e2e/frontend/bun.lock`. Change `package.json`, run it, and commit the
   lockfile in the same change; everything else, `just ci` and CI included,
   installs with `--frozen-lockfile` and fails on drift.
+- `tests/e2e/frontend/bunfig.toml` fixes the registry to the public one and sets
+  a seven-day `minimumReleaseAge`, the same window as `[tool.uv] exclude-newer`
+  and Dependabot's cooldown. The lock therefore records public registry URLs
+  only, and resolves identically on any machine whatever a developer's `~/.npmrc`
+  says.
+- **Undecided:** whether bun should resolve through the Takumi Guard proxy the
+  way PyPI installs do. Two things have to be answered first: whether
+  `bun audit` works against that proxy at all, and whether CI can reach it
+  without credentials. Until then the frontend resolves from the public registry
+  and `just frontend-audit` is its only screening.
 - The prek hooks cover part of this already. Pre-commit runs `just fmt` and
   `just lint`; pre-push runs `just check` and `just test`. Install them once per
   clone with `just install-hooks`.

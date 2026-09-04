@@ -9,10 +9,9 @@ v0.1.8 is published on PyPI (`firepact`) and crates.io (`firepact-core`) through
 OIDC trusted publishing (ADR 0013), `main` is green, and every planned phase is
 implemented. What the system does is in [`docs/README.md`](README.md); why it is
 shaped that way is in [`adr/`](adr/). Today went into the supply chain and the
-gates: the uv cutoff is a relative seven-day cooldown, the screened index
-moved into `pyproject.toml`, and Dependabot resolves where CI does. Every
-lockfile is guarded, `bun.lock` included; every CI job runs its `just` recipe, so
-the two cannot drift; and `protect` requires all fifteen.
+gates: a seven-day cooldown on all three ecosystems, one screened index, every
+lockfile guarded, and every CI job running its `just` recipe so CI and local
+cannot drift.
 
 Repository hardening lives in GitHub settings, not in the tree:
 
@@ -31,10 +30,13 @@ scan of `main` reports no results.
 
 ## Next Actions
 
-1. Work through Dependabot's uv pull requests as they arrive. They resolve again
-   now that the cooldown is relative, so the backlog it could not open before
-   should show up on its next run.
-2. Still open from before: commit released bundles under `schemas/v*.json` and
+1. Work through Dependabot's uv pull requests as they arrive. They resolve
+   now that the cooldown is relative, so the backlog it could not open should
+   appear on its next run.
+2. Decide whether bun should resolve through the Takumi Guard proxy as PyPI
+   does. Two questions first: does `bun audit` work against it, and can CI
+   reach it uncredentialed?
+3. Still open from before: commit released bundles under `schemas/v*.json` and
    wire `firepact compat --history schemas` into CI, and grow `.semgrep/rules/`
    as patterns recur.
 
@@ -44,12 +46,12 @@ scan of `main` reports no results.
   version bump. Run `just build-ext` afterwards.
 - The `importlib.import_module` call in `python/firepact/cli.py` trips the managed
   semgrep guardrail. Accepted false positive: a validated dotted path from
-  build-time input, and that scanner ignores inline `# nosemgrep`.
+  build-time input, and that scanner ignores `# nosemgrep`.
 - x86_64 macOS wheels cross-compile on the arm64 runner, the Intel image having
   been retired. Revisit if that matters past 2027.
 - Dependabot's bun updater cannot read bun 1.4's `lockfileVersion 2`, so version
   updates for `tests/e2e/frontend` may fail. Until they do, `just
-  frontend-audit` is that package's only vulnerability gate.
+  frontend-audit` is its only vulnerability gate.
 
 ## Context the Next Actor Needs
 
@@ -64,9 +66,9 @@ scan of `main` reports no results.
   records it with no environment variable. CI and Dependabot name the same URL.
 - Nine `v*` tags exist with no GitHub Release against any. That is
   deliberate: the registries are the release surface.
-- E2E is local-only: it needs bun and the Firestore emulator on `127.0.0.1:8080`,
-  project `demo-firepact`, `singleProjectMode`, from `~/dotfiles/emulator`. The
-  CI e2e job runs it under `firebase emulators:exec`.
+- E2E needs bun and the emulator on `127.0.0.1:8080`, project `demo-firepact`,
+  `singleProjectMode`, from `~/dotfiles/emulator`. CI runs it under
+  `firebase emulators:exec`.
 - `fixtures/` holds the canonical contract artifact, and the read-view projection
   is shared by emit and compat in `src/lib.rs`, so the gate cannot drift.
 - Third-party actions need allowlisting under Settings, Actions, General.
