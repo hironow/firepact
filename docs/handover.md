@@ -54,7 +54,9 @@ scan of `main` reports no results.
 ## Context the Next Actor Needs
 
 - `main` is covered by the `protect` ruleset: pull requests only, squash merges
-  only, linear history, required checks, and no bypass for anyone.
+  only, linear history, no bypass, and all fifteen `ci.yaml` jobs required by
+  name. Renaming one means editing the ruleset too, per
+  [`docs/release.md`](release.md).
 - `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain. uv
   records the span in `uv.lock` and recomputes it only on a new resolution, so
   `just deps-upgrade` is the only lever.

@@ -24,8 +24,38 @@ artifacts contain is in [architecture.md](architecture.md).
 
 ## Repository rules (GitHub)
 
-- `main` carries no branch ruleset. Changes still go through a pull request by
-  convention, and CI runs on every pull request and every push to `main`.
+- `main` is covered by the `protect` ruleset (branch target, active, with an
+  empty bypass list, so not even an owner can push straight to it): pull requests
+  only, squash the only permitted merge method, linear history, no force-push, no
+  deletion, review threads resolved, and required status checks that must be up to
+  date with `main` before a merge.
+- Every pull-request job in `ci.yaml` is required, matched by exact name:
+
+| Required check | `ci.yaml` job |
+|---|---|
+| `Rust (fmt / clippy / test)` | `rust` |
+| `Python (ruff / mypy / pytest) - locked (3.11)` | `python` |
+| `Python (ruff / mypy / pytest) - locked (3.12)` | `python` |
+| `Python (ruff / mypy / pytest) - locked (3.13)` | `python` |
+| `Python (ruff / mypy / pytest) - locked (3.14)` | `python` |
+| `Pydantic drift canary (2.9.*)` | `pydantic-matrix` |
+| `Pydantic drift canary (2.10.*)` | `pydantic-matrix` |
+| `Pydantic drift canary (2.11.*)` | `pydantic-matrix` |
+| `Pydantic drift canary (2.12.*)` | `pydantic-matrix` |
+| `Pydantic drift canary (2.13.*)` | `pydantic-matrix` |
+| `Frontend tsc (generated types)` | `frontend-typecheck` |
+| `Compatibility gate (FULL_TRANSITIVE)` | `compat` |
+| `E2E (Firestore emulator + onSnapshot)` | `e2e` |
+| `Markdown lint + link check` | `markdown` |
+| `Semgrep (py / rust / ts + project rules)` | `semgrep` |
+
+  CodeQL's `Analyze` runs come from the default setup rather than from `ci.yaml`,
+  and are deliberately not in the list.
+
+- **Renaming a job means editing the ruleset in the same change.** A required
+  check is matched by its name, so a name that stops reporting sits at "Expected
+  — Waiting for status to be reported" and blocks every merge, permanently. This
+  covers adding or removing a matrix leg too, since each leg is its own check.
 - `v*` tags cannot be created, moved, or deleted except by an admin (ruleset
   "Protect release tags (v*)", active, covering creation, update and deletion).
   The `release` environment only pauses for a reviewer, so it cannot stop the tag
