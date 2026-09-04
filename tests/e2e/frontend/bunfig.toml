@@ -1,0 +1,7 @@
+[install]
+# Resolve and install from the public registry no matter what mirror a developer
+# has in ~/.npmrc, so bun.lock is reproducible for every clone and for CI, and so
+# `bun audit` reaches npm's advisories endpoint rather than a mirror that may not
+# serve one. Without this, a machine pointed at a mirror sees the audit fail on
+# that mirror's outages, which reads as `just ci` being broken.
+registry = "https://registry.npmjs.org/"
