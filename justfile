@@ -36,32 +36,23 @@ sync:
 build-ext:
     uv sync --reinstall-package firepact
 
-# `[tool.uv] exclude-newer` is an absolute date so uv.lock resolves identically on
-# every machine and in CI. While it sits in the past, Dependabot's uv updates
-# cannot resolve any release published after it, so they all fail until the date
-# moves. The re-lock goes through the same index CI uses: CI injects UV_INDEX_URL
-# via setup-takumi-guard-pypi, and a lock resolved against pythonhosted URLs fails
-# `uv sync --locked` there. Run this on purpose and on its own branch -- it moves
-# every dependency at once, so the diff wants reading and the full gate wants
-# running before it merges.
+# `[tool.uv] exclude-newer` is a seven-day cooldown, so nothing enters the lock
+# until it has been public for a week. The window is relative and needs no
+# maintenance: uv records the span in uv.lock and recomputes it only when a new
+# resolution is asked for, which is what this task does. It goes through the same
+# index CI uses -- CI injects UV_INDEX_URL via setup-takumi-guard-pypi, and a lock
+# resolved against pythonhosted URLs fails `uv sync --locked` there. Run this on
+# purpose and on its own branch: it moves every dependency at once, so the diff
+# wants reading and the full gate wants running before it merges.
 
-# Advance the uv dependency cutoff to today 00:00 UTC and re-lock against it
-deps-refresh:
+# Upgrade every locked dependency within the cooldown window, then verify the lock
+deps-upgrade:
     #!/usr/bin/env bash
     set -euo pipefail
-    grep -q '^exclude-newer = ' pyproject.toml \
-        || { echo "no [tool.uv] exclude-newer line in pyproject.toml" >&2; exit 1; }
-    cutoff="$(date -u '+%Y-%m-%dT00:00:00Z')"
-    tmp="$(mktemp)"
-    awk -v cutoff="$cutoff" \
-        '/^exclude-newer = / { print "exclude-newer = \"" cutoff "\""; next } { print }' \
-        pyproject.toml > "$tmp"
-    mv "$tmp" pyproject.toml
-    echo "exclude-newer -> $cutoff"
     export UV_INDEX_URL="https://pypi.flatt.tech/simple/"
-    uv lock
+    uv lock --upgrade
     uv sync --locked
-    echo "OK: uv.lock re-locked at $cutoff via $UV_INDEX_URL"
+    echo "OK: uv.lock upgraded and verified via $UV_INDEX_URL"
 
 # Run the Python test suite (rebuilds the native ext so it tracks Rust changes)
 test-py: build-ext

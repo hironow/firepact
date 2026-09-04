@@ -56,10 +56,11 @@ artifacts contain is in [architecture.md](architecture.md).
   the tag is pushed.
 - `version-check` fails the release unless the tag equals both files, so a
   half-done bump stops the run instead of publishing nothing quietly.
-- `[tool.uv] exclude-newer` in `pyproject.toml` is an absolute cutoff that keeps
-  `uv.lock` reproducible, and its own comment says to advance it on release.
-  Re-lock with `UV_INDEX_URL=https://pypi.flatt.tech/simple/` exported, because CI
-  resolves through that index and a lockfile built against pythonhosted URLs fails
+- `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain: uv
+  records the span in `uv.lock` and recomputes it only on a new resolution, so a
+  release needs no lockfile ceremony. When you do re-lock, export
+  `UV_INDEX_URL=https://pypi.flatt.tech/simple/` first, because CI resolves through
+  that index and a lockfile built against pythonhosted URLs fails
   `uv sync --locked`.
 
 ## Every release (CI)
@@ -131,9 +132,9 @@ git-ignored, so anything recorded only there is not reflected here.
   in-tree PyO3 module when the version has not moved.
 - Confirm the lockfiles match the new version: `cargo test --locked`, and
   `uv sync --locked` with the Takumi Guard index exported.
-- `just deps-refresh` advances `[tool.uv] exclude-newer` to today and re-locks
-  through that index. It moves every dependency at once, so run it as its own
-  pull request rather than folding it into a release.
+- `just deps-upgrade` upgrades every locked dependency that has cleared the
+  cooldown and verifies the result with `uv sync --locked`. It moves everything at
+  once, so run it as its own pull request rather than folding it into a release.
 - The prek hooks cover part of this already. Pre-commit runs `just fmt` and
   `just lint`; pre-push runs `just check` and `just test`. Install them once per
   clone with `just install-hooks`.

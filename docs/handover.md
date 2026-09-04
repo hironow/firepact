@@ -25,27 +25,20 @@ Repository hardening lives in GitHub settings, not in the tree:
 
 ## In Progress
 
-- Eight open code scanning alerts, all produced by the first CodeQL run.
+Nothing. The eight alerts the first CodeQL scan raised are fixed, and the latest
+scan of `main` reports no results.
 
 ## Next Actions
 
-1. Clear the eight CodeQL alerts. Each is `actions/missing-workflow-permissions`
-   against `.github/workflows/ci.yaml`, one per job, because that workflow
-   declares no `permissions:`. Add a top-level `permissions: contents: read` the
-   way `release.yaml` already does, rather than dismissing the alerts.
-2. Unblock the uv ecosystem by advancing `[tool.uv] exclude-newer` in
-   `pyproject.toml` past the versions Dependabot is trying to reach, then
-   re-locking. The failure and the required index are under Known Risks.
-3. Still open from before: commit released bundles under `schemas/v*.json` and
+1. Work through Dependabot's uv pull requests as they arrive. They resolve again
+   now that the cooldown is relative, so the backlog it could not open before
+   should show up on its next run.
+2. Still open from before: commit released bundles under `schemas/v*.json` and
    wire `firepact compat --history schemas` into CI, and grow `.semgrep/rules/`
    as patterns recur.
 
 ## Known Risks / Blockers
 
-- **Every Dependabot uv update currently fails.** `[tool.uv] exclude-newer` is
-  pinned at `2026-08-14T00:00:00Z`, so `uv lock --upgrade-package` cannot resolve
-  ruff 0.16.5, mypy 2.3.1, or google-cloud-firestore 2.29.0, each published after
-  that cutoff. The date has to be moved by hand; this does not self-heal.
 - **Re-lock only under the Takumi Guard index.** CI injects
   `UV_INDEX_URL=https://pypi.flatt.tech/simple/`, so a lockfile resolved against
   pythonhosted URLs fails `uv sync --locked`. Export that variable before
@@ -60,7 +53,11 @@ Repository hardening lives in GitHub settings, not in the tree:
 
 ## Context the Next Actor Needs
 
-- `main` carries no branch ruleset, but changes still go through a pull request.
+- `main` is covered by the `protect` ruleset: pull requests only, squash merges
+  only, linear history, required checks, and no bypass for anyone.
+- `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain. uv
+  records the span in `uv.lock` and recomputes it only on a new resolution, so
+  `just deps-upgrade` is the only lever.
 - Nine `v*` tags exist and no GitHub Release has been cut against any of them.
   That is deliberate; the registries are the release surface.
 - E2E is local-only: it needs bun and the Firestore emulator on `127.0.0.1:8080`,
@@ -76,10 +73,10 @@ Repository hardening lives in GitHub settings, not in the tree:
 
 ## Relevant Files and Commands
 
-- `.github/workflows/ci.yaml` — what the CodeQL alerts point at.
+- `.github/workflows/ci.yaml` — the CI gate; declares `permissions: contents: read`.
 - [`docs/release.md`](release.md) — how a version reaches PyPI and crates.io.
-- `pyproject.toml`, key `[tool.uv] exclude-newer` — the uv resolution cutoff.
+- `pyproject.toml`, key `[tool.uv] exclude-newer` — the dependency cooldown.
 - `src/lib.rs` — emitter, shared projection, PyO3 binding; `src/compat.rs` — gate.
 - `just check` — the no-write gate: rust and python lint, types, markdown, links.
-- `just test` / `just test-e2e` / `just build-ext` / `just example-gen`.
+- `just test` / `just test-e2e` / `just build-ext` / `just deps-upgrade`.
 - `just ci` — local CI parity; `just ci-all` adds the pydantic version matrix.
