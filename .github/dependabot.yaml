@@ -42,6 +42,12 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Keep this at seven days to match `[tool.uv] exclude-newer = "7 days"` in
+    # pyproject.toml, and change the two together. They gate different things: uv's
+    # cutoff decides what may enter uv.lock at all, while this one only decides when
+    # Dependabot opens the pull request. Let this window get shorter than uv's and
+    # Dependabot proposes releases uv cannot resolve yet, so every such update fails
+    # -- which is exactly what happened while uv's cutoff was a fixed date.
     cooldown:
       default-days: 7
     labels: ["dependencies", "python"]
