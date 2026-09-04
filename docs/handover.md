@@ -33,9 +33,9 @@ scan of `main` reports no results.
 1. Work through Dependabot's uv pull requests as they arrive. They resolve
    now that the cooldown is relative, so the backlog it could not open should
    appear on its next run.
-2. Decide whether bun should resolve through the Takumi Guard proxy as PyPI
-   does. Two questions first: does `bun audit` work against it, and can CI
-   reach it uncredentialed?
+2. Decide whether bun should resolve through the Takumi Guard proxy. The
+   research says not yet, and says why:
+   [2026-09-04 note](research/2026-09-04-takumi-guard-npm-proxy-for-bun.md).
 3. Still open from before: commit released bundles under `schemas/v*.json` and
    wire `firepact compat --history schemas` into CI, and grow `.semgrep/rules/`
    as patterns recur.
