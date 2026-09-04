@@ -13,9 +13,13 @@ help:
 build:
     cargo build
 
+# --locked fails if Cargo.lock has drifted from Cargo.toml, e.g. a version bump
+# that forgot to regenerate the lock. CI has always passed it; the recipe did not,
+# so `just test` could pass on a tree CI would reject.
+
 # Run the Rust test suite (golden + compat tables)
 test-rust:
-    cargo test
+    cargo test --locked
 
 # Format Rust sources
 fmt-rust:
@@ -53,8 +57,12 @@ deps-upgrade:
     uv sync --locked
     echo "OK: uv.lock upgraded and verified"
 
+# Depends on `build` as well as `build-ext`: tests/integration/test_py_rust_parity.py
+# skips itself when target/debug/firepact is missing, so without the binary the
+# recipe passes while quietly testing less than CI does.
+
 # Run the Python test suite (rebuilds the native ext so it tracks Rust changes)
-test-py: build-ext
+test-py: build build-ext
     uv run pytest
 
 # Lint + type-check Python
@@ -65,6 +73,20 @@ lint-py:
 # Format Python sources
 fmt-py:
     uv run ruff format .
+
+# `check` composes it and the CI python job calls it, so the paths each tool
+# covers are written once, here.
+
+# The Python gate alone: lint, types, format drift; no Rust or Markdown
+check-py: lint-py
+    uv run ruff format --check .
+
+# The uv-side counterpart to `cargo test --locked`. It installs, so it stays out
+# of the no-write `check` and joins `ci` instead.
+
+# Fail if uv.lock has drifted from pyproject.toml
+lock-check:
+    uv sync --locked
 
 # Regenerate the committed example outputs. Two worked references:
 #  - chat/        : the decorator-on-model style (camelCase, doc-id converter).
@@ -128,8 +150,7 @@ test: test-rust test-py
 lint: lint-rust lint-py lint-md check-links
 
 # Strict gate, no writes: everything `lint` runs plus Python format drift
-check: lint
-    uv run ruff format --check .
+check: lint-rust check-py lint-md check-links
 
 # Format all sources
 fmt: fmt-rust fmt-py fmt-md
@@ -166,13 +187,23 @@ pydantic-matrix:
     set -euo pipefail
     for v in 2.9 2.10 2.11 2.12 2.13; do
         echo "=== pydantic ${v}.* ==="
-        FIREPACT_PYDANTIC_MATRIX=1 uv run --with "pydantic==${v}.*" pytest tests/unit tests/integration
+        just pydantic-check "${v}.*"
     done
 
-# Local parity with the CI workflow: every job except pydantic-matrix
-# (rust+python lint/format/types via check, tests, semgrep, compat gate,
-# frontend tsc, emulator e2e). For the version matrix too, run `just ci-all`.
-ci: check test semgrep example-compat frontend-typecheck test-e2e-emulator
+# One leg of the canary. CI's pydantic-matrix job runs the legs in parallel and
+# `just pydantic-matrix` runs them in sequence, both through this recipe, so the
+# env flag and the test paths are defined once.
+
+# Run the test suite against one pydantic version, e.g. `just pydantic-check 2.13.*`
+pydantic-check version:
+    FIREPACT_PYDANTIC_MATRIX=1 uv run --with "pydantic=={{version}}" pytest tests/unit tests/integration
+
+# Every CI job except pydantic-matrix: lint, format and types via check, the
+# lockfile guard, tests, semgrep, the compat gate, frontend tsc, emulator e2e.
+# CI calls these same recipes, so the two cannot drift apart.
+
+# Local parity with the CI workflow (add the version matrix with `just ci-all`)
+ci: check lock-check test semgrep example-compat frontend-typecheck test-e2e-emulator
     @echo "OK: ci parity gate passed"
 
 # Full CI parity including the pydantic version matrix
