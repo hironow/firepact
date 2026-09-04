@@ -158,9 +158,11 @@ git-ignored, so anything recorded only there is not reflected here.
 ## Local checks before any release
 
 - `just ci` is the full local parity gate: `check` (rust and python lint, types,
-  format drift, markdown, links), `test`, `semgrep`, `example-compat`,
-  `frontend-typecheck`, and the emulator e2e run. `just ci-all` adds the pydantic
-  version matrix.
+  format drift, markdown, links), `lock-check`, `test`, `semgrep`,
+  `example-compat`, `frontend-typecheck`, and the emulator e2e run. `just ci-all`
+  adds the pydantic version matrix. Every CI job calls these same recipes, so the
+  justfile is the one place that defines what a gate covers and which paths it
+  spans; a gate widened there widens in CI at the same time.
 - `just build-ext` after any Rust change, because `uv sync` skips rebuilding the
   in-tree PyO3 module when the version has not moved.
 - Confirm the lockfiles match the new version: `cargo test --locked`, and

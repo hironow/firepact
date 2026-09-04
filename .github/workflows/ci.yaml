@@ -28,11 +28,12 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
-      - run: cargo fmt --check
-      - run: cargo clippy --all-targets -- -D warnings
-      # --locked fails if Cargo.lock is out of sync with Cargo.toml (e.g. a version
-      # bump that forgot to regenerate the lock), catching it before a release tag.
-      - run: cargo test --locked
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+      # The recipes are the definition of what these gates cover; this job runs
+      # them so `just check` / `just test` cannot drift from CI. test-rust passes
+      # --locked, which catches a Cargo.lock left behind by a version bump.
+      - run: just lint-rust
+      - run: just test-rust
 
   python:
     name: Python (ruff / mypy / pytest) - locked
@@ -51,18 +52,17 @@ jobs:
           # `uv sync --locked` guard to be reliable (lock revision is uv-version-tied).
           version: "0.11.16"
           python-version: ${{ matrix.python-version }}
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       # Route PyPI installs through Takumi Guard (blocks known-malicious packages
       # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
       # no account needed. Must precede any uv/pip install.
       - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
-      # --locked fails if uv.lock drifts from pyproject.toml (e.g. a version bump
-      # that forgot to sync the lock), the uv-side counterpart to cargo --locked.
-      - run: uv sync --locked
-      - run: cargo build --bin firepact # the binary front-end (py<->rust parity test)
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run mypy .
-      - run: uv run pytest # unit + integration (exact golden on locked pydantic)
+      # lock-check is `uv sync --locked`, the uv-side counterpart to cargo's
+      # --locked. check-py is ruff, mypy and format drift; test-py builds the
+      # binary front-end first, so the py<->rust parity test cannot skip itself.
+      - run: just lock-check
+      - run: just check-py
+      - run: just test-py
 
   pydantic-matrix:
     name: Pydantic drift canary
@@ -71,10 +71,6 @@ jobs:
       fail-fast: false
       matrix:
         pydantic: ["2.9.*", "2.10.*", "2.11.*", "2.12.*", "2.13.*"]
-    env:
-      # Skip the exact schema-layer golden (frozen against the locked pydantic);
-      # the emit-layer golden + semantic checks must still hold across versions.
-      FIREPACT_PYDANTIC_MATRIX: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
@@ -85,13 +81,17 @@ jobs:
           # `uv sync --locked` guard to be reliable (lock revision is uv-version-tied).
           version: "0.11.16"
           python-version: "3.12"
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       # Route PyPI installs through Takumi Guard (blocks known-malicious packages
       # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
       # no account needed. Must precede any uv/pip install.
       - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
       - run: uv sync
+      # One leg of the canary. The recipe owns the test paths and the env flag that
+      # skips the exact schema-layer golden, so this matrix and `just
+      # pydantic-matrix` exercise the same thing.
       - name: Run tests against pydantic ${{ matrix.pydantic }}
-        run: uv run --with "pydantic==${{ matrix.pydantic }}" pytest tests/unit tests/integration
+        run: just pydantic-check "${{ matrix.pydantic }}"
 
   frontend-typecheck:
     name: Frontend tsc (generated types)
@@ -106,17 +106,11 @@ jobs:
           # moving tag, so never reuse a cached executable.
           bun-version: canary
           no-cache: true
-      - run: cargo build
-      - name: Generate TypeScript from the contract fixture
-        run: ./target/debug/firepact emit fixtures/message.bundle.json > tests/e2e/frontend/generated.ts
-      - name: Type-check the consumer against the generated types
-        working-directory: tests/e2e/frontend
-        run: |
-          # --frozen-lockfile fails if bun.lock drifts from package.json, the bun
-          # counterpart to `uv sync --locked` and `cargo test --locked`. Without it
-          # bun silently re-resolves and the committed lock stops meaning anything.
-          bun install --frozen-lockfile
-          bunx tsc --noEmit
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+      # Builds the core, emits TypeScript from the contract fixture, installs the
+      # consumer with --frozen-lockfile and type-checks it. All of that lives in
+      # the recipe so `just ci` runs exactly this.
+      - run: just frontend-typecheck
 
   compat:
     name: Compatibility gate (FULL_TRANSITIVE)
@@ -173,10 +167,10 @@ jobs:
       # --frozen-lockfile: same lockfile guard as the frontend-typecheck job.
       - run: bun install --frozen-lockfile
         working-directory: tests/e2e/frontend
+      # The emulators:exec invocation lives in the recipe, so `just ci` runs the
+      # same command this job does.
       - name: Run the E2E suite under the Firestore emulator
-        run: >-
-          firebase emulators:exec --only firestore --project demo-firepact
-          --config tests/e2e/firebase.json "just test-e2e"
+        run: just test-e2e-emulator
 
   markdown:
     name: Markdown lint + link check
