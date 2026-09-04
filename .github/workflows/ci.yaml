@@ -148,7 +148,7 @@ jobs:
           # moving tag, so never reuse a cached executable.
           bun-version: canary
           no-cache: true
-      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.2.0 (firestore emulator needs a JVM)
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v5.2.0 (firestore emulator needs a JVM)
         with:
           distribution: temurin
           java-version: "21"
