@@ -17,9 +17,10 @@ artifacts contain is in [architecture.md](architecture.md).
 - **The tag is only a trigger; the version comes from the files.** crates.io
   publishes the version `cargo metadata` reads out of `Cargo.toml`, and PyPI
   receives whatever maturin built from `pyproject.toml`. Nothing compares either
-  against the tag name. Tagging `v0.2.0` on a tree that still says `0.1.8`
-  therefore publishes nothing at all: both publish steps skip a version that is
-  already on its registry, and the run still reports success.
+  against the tag name, so a `version-check` job is what makes a mismatch fail.
+  Without it, tagging `v0.2.0` on a tree that still says `0.1.8` would publish
+  nothing at all and still report success, because both publish steps skip a
+  version already on its registry.
 
 ## Repository rules (GitHub)
 
@@ -53,8 +54,8 @@ artifacts contain is in [architecture.md](architecture.md).
 - CI's `cargo test --locked` and `uv sync --locked` fail when a version bump did
   not regenerate `Cargo.lock` or `uv.lock`, which catches a half-done bump before
   the tag is pushed.
-- Nothing validates the tag against those two files, so confirm the bump commit
-  and the tag agree before pushing the tag.
+- `version-check` fails the release unless the tag equals both files, so a
+  half-done bump stops the run instead of publishing nothing quietly.
 - `[tool.uv] exclude-newer` in `pyproject.toml` is an absolute cutoff that keeps
   `uv.lock` reproducible, and its own comment says to advance it on release.
   Re-lock with `UV_INDEX_URL=https://pypi.flatt.tech/simple/` exported, because CI
@@ -68,22 +69,27 @@ Push the `v*` tag and `release.yaml` takes over. Its default permission is
 `if: github.repository == 'hironow/firepact'`, and the run is never cancelled
 mid-publish.
 
-1. **Build.** `PyO3/maturin-action` builds five wheels (linux x86_64 and aarch64
+1. **Tag check.** `version-check` compares the tag against the `version` in
+   `Cargo.toml` and in `pyproject.toml` and fails on any mismatch, naming both
+   files rather than stopping at the first. It depends on nothing, so it fails in
+   seconds rather than after the wheel matrix, and both publish jobs name it in
+   their `needs`.
+2. **Build.** `PyO3/maturin-action` builds five wheels (linux x86_64 and aarch64
    under manylinux, macOS x86_64 and arm64 both on `macos-latest`, windows x64)
    plus an sdist, uploaded as `wheels-*` artifacts. `abi3-py311` means one wheel
    per platform covers CPython 3.11 and later, so the matrix is per-platform
    rather than per-interpreter.
-2. **Provenance.** Gated on every build job, `actions/attest-build-provenance`
+3. **Provenance.** Gated on every build job, `actions/attest-build-provenance`
    attests `dist/*` and produces one GitHub SLSA build provenance statement. That
    is a separate artifact from the PyPI attestation, verified with
    `gh attestation verify`.
-3. **crates.io.** Gated on the provenance job, so nothing publishes until the
+4. **crates.io.** Gated on the provenance job, so nothing publishes until the
    build is complete and recorded. `rust-lang/crates-io-auth-action` mints a
    thirty-minute token from the workflow's OIDC identity. The step first asks the
    crates.io API whether this version already exists; if it does, the publish is
    skipped, otherwise it runs `cargo publish -p firepact-core --locked`. That
    makes a re-run of a partially failed release safe.
-4. **PyPI.** Gated on crates.io. `pypa/gh-action-pypi-publish` uploads the same
+5. **PyPI.** Gated on crates.io. `pypa/gh-action-pypi-publish` uploads the same
    artifacts through Trusted Publishing with `skip-existing: true`, and emits the
    PEP 740 publish attestations itself.
 
@@ -125,6 +131,9 @@ git-ignored, so anything recorded only there is not reflected here.
   in-tree PyO3 module when the version has not moved.
 - Confirm the lockfiles match the new version: `cargo test --locked`, and
   `uv sync --locked` with the Takumi Guard index exported.
+- `just deps-refresh` advances `[tool.uv] exclude-newer` to today and re-locks
+  through that index. It moves every dependency at once, so run it as its own
+  pull request rather than folding it into a release.
 - The prek hooks cover part of this already. Pre-commit runs `just fmt` and
   `just lint`; pre-push runs `just check` and `just test`. Install them once per
   clone with `just install-hooks`.
