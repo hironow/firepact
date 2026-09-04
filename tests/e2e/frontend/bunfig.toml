@@ -5,3 +5,9 @@
 # serve one. Without this, a machine pointed at a mirror sees the audit fail on
 # that mirror's outages, which reads as `just ci` being broken.
 registry = "https://registry.npmjs.org/"
+# Never resolve a version published less than seven days ago. Same window as
+# `[tool.uv] exclude-newer = "7 days"` in pyproject.toml and the cooldown in
+# .github/dependabot.yaml, so a compromised-then-yanked release is not pulled in
+# on day zero on any side of the project. Applies to new resolutions only;
+# bun.lock stays as it is.
+minimumReleaseAge = 604800
