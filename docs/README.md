@@ -16,6 +16,7 @@ are archived in [`history/`](history/).
 | [intent.md](intent.md) | the requester's goal and success criteria for the work |
 | [handover.md](handover.md) | current status and next actions for the next actor |
 | [adr/](adr/) | architecture decision records (immutable history) |
+| [research/](research/) | dated investigation snapshots; superseded by newer ones, never current-state docs |
 | [history/](history/) | original design/handoff seed documents (verbatim, not live docs) |
 
 Documentation here MUST match the implementation; outdated docs are bugs.
