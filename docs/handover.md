@@ -53,7 +53,8 @@ scan of `main` reports no results.
 
 ## Context the Next Actor Needs
 
-- `main` carries no branch ruleset, but changes still go through a pull request.
+- `main` is covered by the `protect` ruleset: pull requests only, squash merges
+  only, linear history, required checks, and no bypass for anyone.
 - `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain. uv
   records the span in `uv.lock` and recomputes it only on a new resolution, so
   `just deps-upgrade` is the only lever.
@@ -72,7 +73,7 @@ scan of `main` reports no results.
 
 ## Relevant Files and Commands
 
-- `.github/workflows/ci.yaml` — what the CodeQL alerts point at.
+- `.github/workflows/ci.yaml` — the CI gate; declares `permissions: contents: read`.
 - [`docs/release.md`](release.md) — how a version reaches PyPI and crates.io.
 - `pyproject.toml`, key `[tool.uv] exclude-newer` — the dependency cooldown.
 - `src/lib.rs` — emitter, shared projection, PyO3 binding; `src/compat.rs` — gate.
