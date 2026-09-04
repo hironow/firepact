@@ -77,7 +77,13 @@ updates:
       prefix: "chore"
       include: "scope"
 
-  - package-ecosystem: "npm"
+  # bun, not npm: the only lockfile there is bun.lock, which the npm updater
+  # cannot read, so it has been proposing manifest edits without touching the
+  # lock. Dependabot's bun updater does not yet read bun 1.4's lockfileVersion 2
+  # either, so version updates here may fail until it does. While they do,
+  # `just frontend-audit` is the only vulnerability gate this package has, and it
+  # runs on every pull request as part of the Frontend tsc job.
+  - package-ecosystem: "bun"
     directory: "/tests/e2e/frontend"
     schedule:
       interval: "weekly"
