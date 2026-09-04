@@ -4,10 +4,22 @@ How `firepact` reaches PyPI and `firepact-core` reaches crates.io. The rationale
 [ADR 0013](adr/0013-oidc-trusted-publishing-release.md); what the published
 artifacts contain is in [architecture.md](architecture.md).
 
-Both artifacts are built and published by
-[`.github/workflows/release.yaml`](../.github/workflows/release.yaml) from a `v*`
-tag, under OIDC Trusted Publishing. No long-lived publish token exists in the
-repository, in CI secrets, or on a maintainer machine.
+## Two facts that shape everything
+
+- **No publish token exists anywhere.** Both registries are reached only through
+  OIDC Trusted Publishing from
+  [`.github/workflows/release.yaml`](../.github/workflows/release.yaml), driven by
+  a `v*` tag. There is no token in the repository, in CI secrets, or on a
+  maintainer machine, so a release cannot be cut locally and cannot skip the
+  `release` environment approval. Nothing to steal is also nothing to fall back
+  on: when a publish fails, the fix is in the workflow or the registry-side
+  binding, never a local `cargo publish` or `twine upload`.
+- **The tag is only a trigger; the version comes from the files.** crates.io
+  publishes the version `cargo metadata` reads out of `Cargo.toml`, and PyPI
+  receives whatever maturin built from `pyproject.toml`. Nothing compares either
+  against the tag name. Tagging `v0.2.0` on a tree that still says `0.1.8`
+  therefore publishes nothing at all: both publish steps skip a version that is
+  already on its registry, and the run still reports success.
 
 ## Repository rules (GitHub)
 
@@ -41,10 +53,8 @@ repository, in CI secrets, or on a maintainer machine.
 - CI's `cargo test --locked` and `uv sync --locked` fail when a version bump did
   not regenerate `Cargo.lock` or `uv.lock`, which catches a half-done bump before
   the tag is pushed.
-- **The workflow does not compare the tag against the versions.** crates.io
-  publishes the version `cargo metadata` reads out of `Cargo.toml`, and PyPI
-  receives whatever maturin built from `pyproject.toml`. A tag that disagrees with
-  those files still publishes the file versions, under a misleading tag name.
+- Nothing validates the tag against those two files, so confirm the bump commit
+  and the tag agree before pushing the tag.
 - `[tool.uv] exclude-newer` in `pyproject.toml` is an absolute cutoff that keeps
   `uv.lock` reproducible, and its own comment says to advance it on release.
   Re-lock with `UV_INDEX_URL=https://pypi.flatt.tech/simple/` exported, because CI
