@@ -91,7 +91,9 @@ artifacts contain is in [architecture.md](architecture.md).
   release needs no lockfile ceremony. When you do re-lock, export
   `UV_INDEX_URL=https://pypi.flatt.tech/simple/` first, because CI resolves through
   that index and a lockfile built against pythonhosted URLs fails
-  `uv sync --locked`.
+  `uv sync --locked`. Dependabot reaches the same screened index through the
+  `registries` block in `.github/dependabot.yaml`; a registry it cannot reach is
+  one it silently resolves around.
 
 ## Every release (CI)
 

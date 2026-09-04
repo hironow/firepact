@@ -41,27 +41,27 @@ scan of `main` reports no results.
 
 - **Re-lock only under the Takumi Guard index.** CI injects
   `UV_INDEX_URL=https://pypi.flatt.tech/simple/`, so a lockfile resolved against
-  pythonhosted URLs fails `uv sync --locked`. Export that variable before
-  `uv lock`.
+  pythonhosted URLs fails `uv sync --locked`. Export it before `uv lock`.
+  Dependabot reaches the same index through `registries` in `dependabot.yaml`.
 - `uv sync` skips rebuilding the in-tree PyO3 module when Rust changes without a
   version bump. Run `just build-ext` after touching Rust.
 - The `importlib.import_module` call in `python/firepact/cli.py` trips the managed
   semgrep guardrail. Accepted false positive: a validated dotted path from
-  build-time developer input, and that scanner ignores inline `# nosemgrep`.
-- x86_64 macOS wheels are cross-compiled on the arm64 runner, the Intel image
-  having been retired. Revisit if that coverage matters past 2027.
+  build-time input, and that scanner ignores inline `# nosemgrep`.
+- x86_64 macOS wheels cross-compile on the arm64 runner, the Intel image having
+  been retired. Revisit if that matters past 2027.
 
 ## Context the Next Actor Needs
 
 - `main` is covered by the `protect` ruleset: pull requests only, squash merges
   only, linear history, no bypass, and all fifteen `ci.yaml` jobs required by
-  name. Renaming one means editing the ruleset too, per
+  name. Renaming one means editing the ruleset too; see
   [`docs/release.md`](release.md).
 - `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain. uv
   records the span in `uv.lock` and recomputes it only on a new resolution, so
   `just deps-upgrade` is the only lever.
-- Nine `v*` tags exist and no GitHub Release has been cut against any of them.
-  That is deliberate; the registries are the release surface.
+- Nine `v*` tags exist with no GitHub Release cut against any. That is
+  deliberate; the registries are the release surface.
 - E2E is local-only: it needs bun and the Firestore emulator on `127.0.0.1:8080`,
   project `demo-firepact`, `singleProjectMode`, from `~/dotfiles/emulator`. The
   CI e2e job runs it under `firebase emulators:exec`.
