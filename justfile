@@ -39,20 +39,19 @@ build-ext:
 # `[tool.uv] exclude-newer` is a seven-day cooldown, so nothing enters the lock
 # until it has been public for a week. The window is relative and needs no
 # maintenance: uv records the span in uv.lock and recomputes it only when a new
-# resolution is asked for, which is what this task does. It goes through the same
-# index CI uses -- CI injects UV_INDEX_URL via setup-takumi-guard-pypi, and a lock
-# resolved against pythonhosted URLs fails `uv sync --locked` there. Run this on
-# purpose and on its own branch: it moves every dependency at once, so the diff
-# wants reading and the full gate wants running before it merges.
+# resolution is asked for, which is what this task does. The index needs no
+# exporting either: [[tool.uv.index]] in pyproject.toml is the default index, so a
+# plain `uv lock` records the screened registry that `uv sync --locked` expects.
+# Run this on purpose and on its own branch: it moves every dependency at once, so
+# the diff wants reading and the full gate wants running before it merges.
 
 # Upgrade every locked dependency within the cooldown window, then verify the lock
 deps-upgrade:
     #!/usr/bin/env bash
     set -euo pipefail
-    export UV_INDEX_URL="https://pypi.flatt.tech/simple/"
     uv lock --upgrade
     uv sync --locked
-    echo "OK: uv.lock upgraded and verified via $UV_INDEX_URL"
+    echo "OK: uv.lock upgraded and verified"
 
 # Run the Python test suite (rebuilds the native ext so it tracks Rust changes)
 test-py: build-ext
