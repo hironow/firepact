@@ -1,7 +1,7 @@
 # Handover
 
-**Last updated:** 2026-09-04 (JST)
-**Updated by:** Claude Code session (delegated by hironow)
+**Last updated:** 2026-09-04 13:46 (JST)
+**Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
 
 ## Current State
 
@@ -55,9 +55,6 @@ Repository hardening lives in GitHub settings, not in the tree:
 - The `importlib.import_module` call in `python/firepact/cli.py` trips the managed
   semgrep guardrail. Accepted false positive: a validated dotted path from
   build-time developer input, and that scanner ignores inline `# nosemgrep`.
-- Third-party actions must be allowlisted under Settings, Actions, General.
-  `extractions/setup-just` pulls in `extractions/setup-crate`, so both need an
-  entry before CI setup will run.
 - x86_64 macOS wheels are cross-compiled on the arm64 runner, the Intel image
   having been retired. Revisit if that coverage matters past 2027.
 
@@ -71,13 +68,16 @@ Repository hardening lives in GitHub settings, not in the tree:
   CI e2e job runs it under `firebase emulators:exec`.
 - `fixtures/` holds the canonical contract artifact, and the read-view projection
   is shared by emit and compat in `src/lib.rs`, so the gate cannot drift.
-- To release: bump `pyproject.toml` and `Cargo.toml` together, tag `vX.Y.Z`, push,
-  then approve the `release` environment. The runbook is the git-ignored
-  `private/PUBLISH_HOWTO.md`.
+- Releasing has its own document, `docs/release.md`: the repository rules, the
+  tag-driven workflow, and the checks to run first.
+- Third-party actions must be allowlisted under Settings, Actions, General.
+  `extractions/setup-just` pulls in `extractions/setup-crate`, so both need an
+  entry before CI setup will run.
 
 ## Relevant Files and Commands
 
 - `.github/workflows/ci.yaml` — what the CodeQL alerts point at.
+- `docs/release.md` — how a version reaches PyPI and crates.io.
 - `pyproject.toml`, key `[tool.uv] exclude-newer` — the uv resolution cutoff.
 - `src/lib.rs` — emitter, shared projection, PyO3 binding; `src/compat.rs` — gate.
 - `just check` — the no-write gate: rust and python lint, types, markdown, links.
