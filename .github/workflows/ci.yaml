@@ -193,9 +193,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.16"
+          python-version: "3.13"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
+      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
+      # no account needed. Must precede any uv/pip install.
+      - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+      # Pinned, installed with uv rather than pipx (uv is the Python tool this repo
+      # uses), and resolved through the screened index like every other install
+      # here. An unpinned scanner turns an upstream rule change into a red build on
+      # a commit that did not touch anything. Bump it by hand, and only to a
+      # version that has cleared the seven-day window and is on the proxy: 1.176.0
+      # was published 2026-09-01 and the proxy does not carry it.
       - name: Install semgrep
-        run: pipx install semgrep
+        run: uv tool install semgrep==1.175.0
       # Registry language packs (p/python, p/rust, p/typescript) + any local rules;
       # findings fail the job. Needs network to fetch the registry rulesets.
       - name: Run semgrep

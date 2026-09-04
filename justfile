@@ -165,12 +165,41 @@ semgrep:
 
 # --- CI parity (.github/workflows/ci.yaml) ---
 
+# Dependency vulnerability audit for the e2e frontend (CI gate; needs the npm
+# registry reachable). The advisories endpoint returns transient 5xx; a registry
+# or transport error is retried (delays from AUDIT_RETRY_DELAYS, seconds), then
+# the audit fails. A real finding fails at once, and the gate is never skipped or
+# downgraded.
+#
+# The 5xx pattern is host-agnostic on purpose: CI reaches registry.npmjs.org,
+# while a developer whose ~/.npmrc points elsewhere sees that host in the error.
+#
+# This is the only vulnerability gate the frontend has. Dependabot's bun updater
+# cannot read bun 1.4's lockfileVersion 2, so its version updates for
+# tests/e2e/frontend can fail until it can; see .github/dependabot.yaml.
+
+# Audit the e2e frontend dependencies (fails on a high-severity advisory)
+frontend-audit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd tests/e2e/frontend
+    log="$(mktemp)"
+    trap 'rm -f "$log"' EXIT
+    for delay in ${AUDIT_RETRY_DELAYS:-20 60} 0; do
+        if bun audit --audit-level=high 2>&1 | tee "$log"; then exit 0; fi
+        if [ "$delay" = 0 ] || ! grep -qE 'https?://[^ ]+ - 5[0-9]{2}|ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN' "$log"; then
+            exit 1
+        fi
+        echo "bun audit: registry error, retrying in ${delay}s" >&2
+        sleep "$delay"
+    done
+
 # Mirrors the CI frontend-typecheck job, --frozen-lockfile included, so `just ci`
 # cannot quietly rewrite bun.lock the way a plain install does. If this fails with
 # "lockfile had changes", run `just frontend-install` and commit the lockfile.
 
 # Type-check the frontend consumer against freshly generated types
-frontend-typecheck: build
+frontend-typecheck: build frontend-audit
     ./target/debug/firepact emit fixtures/message.bundle.json > tests/e2e/frontend/generated.ts
     cd tests/e2e/frontend && bun install --frozen-lockfile && bunx tsc --noEmit
 

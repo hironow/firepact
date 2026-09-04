@@ -165,8 +165,8 @@ git-ignored, so anything recorded only there is not reflected here.
   spans; a gate widened there widens in CI at the same time.
 - `just build-ext` after any Rust change, because `uv sync` skips rebuilding the
   in-tree PyO3 module when the version has not moved.
-- Confirm the lockfiles match the new version: `cargo test --locked`, and
-  `uv sync --locked` with the Takumi Guard index exported.
+- Confirm the lockfiles match the new version: `cargo test --locked` and
+  `uv sync --locked`, both of which `just ci` already runs.
 - `just deps-upgrade` upgrades every locked dependency that has cleared the
   cooldown and verifies the result with `uv sync --locked`. It moves everything at
   once, so run it as its own pull request rather than folding it into a release.
@@ -178,3 +178,21 @@ git-ignored, so anything recorded only there is not reflected here.
 - The prek hooks cover part of this already. Pre-commit runs `just fmt` and
   `just lint`; pre-push runs `just check` and `just test`. Install them once per
   clone with `just install-hooks`.
+
+## Dependency vulnerability gate
+
+- `just frontend-audit` runs `bun audit --audit-level=high` over
+  `tests/e2e/frontend`, and `frontend-typecheck` depends on it, so it gates every
+  pull request through the Frontend tsc job as well as `just ci`. A real advisory
+  fails at once. A registry 5xx or a transport error is retried on the delays in
+  `AUDIT_RETRY_DELAYS` (default `20 60`) and then fails: the gate is never skipped
+  and never downgraded.
+- That audit is the only vulnerability gate the frontend has. Its Dependabot
+  ecosystem is `bun`, because `bun.lock` is the only lockfile there, but
+  Dependabot's bun updater does not yet read bun 1.4's `lockfileVersion 2`, so
+  version updates for that directory can fail until it does.
+- semgrep is pinned to 1.175.0 in `ci.yaml`, installed through the screened
+  index, and bumped by hand; Dependabot does not track it, so an upstream rule
+  change cannot turn an unrelated commit red on its own. A bump has to clear two
+  bars: the version must be past the seven-day cooldown, and the screened index
+  must carry it. On 2026-09-04, 1.176.0 met neither.
