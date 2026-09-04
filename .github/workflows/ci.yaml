@@ -5,6 +5,14 @@ on:
     branches: [main]
   pull_request:
 
+# Least privilege, workflow-wide: every job here only reads the repository.
+# Nothing comments on a pull request, uploads SARIF, attests an artifact, or
+# writes through gh, so no job elevates. setup-takumi-guard-pypi is used with no
+# bot-id, which is its anonymous mode: it sets UV_INDEX_URL from its first step
+# and never requests an OIDC token, so id-token: write is not needed either.
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
