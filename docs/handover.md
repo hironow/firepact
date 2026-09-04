@@ -39,10 +39,6 @@ scan of `main` reports no results.
 
 ## Known Risks / Blockers
 
-- **Re-lock only under the Takumi Guard index.** CI injects
-  `UV_INDEX_URL=https://pypi.flatt.tech/simple/`, so a lockfile resolved against
-  pythonhosted URLs fails `uv sync --locked`. Export it before `uv lock`.
-  Dependabot reaches the same index through `registries` in `dependabot.yaml`.
 - `uv sync` skips rebuilding the in-tree PyO3 module when Rust changes without a
   version bump. Run `just build-ext` after touching Rust.
 - The `importlib.import_module` call in `python/firepact/cli.py` trips the managed
@@ -60,6 +56,8 @@ scan of `main` reports no results.
 - `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain. uv
   records the span in `uv.lock` and recomputes it only on a new resolution, so
   `just deps-upgrade` is the only lever.
+- The screened index is `[[tool.uv.index]]` in `pyproject.toml`, so `uv lock`
+  records it with no environment variable. CI and Dependabot name the same URL.
 - Nine `v*` tags exist with no GitHub Release cut against any. That is
   deliberate; the registries are the release surface.
 - E2E is local-only: it needs bun and the Firestore emulator on `127.0.0.1:8080`,

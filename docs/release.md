@@ -88,12 +88,13 @@ artifacts contain is in [architecture.md](architecture.md).
   half-done bump stops the run instead of publishing nothing quietly.
 - `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain: uv
   records the span in `uv.lock` and recomputes it only on a new resolution, so a
-  release needs no lockfile ceremony. When you do re-lock, export
-  `UV_INDEX_URL=https://pypi.flatt.tech/simple/` first, because CI resolves through
-  that index and a lockfile built against pythonhosted URLs fails
-  `uv sync --locked`. Dependabot reaches the same screened index through the
-  `registries` block in `.github/dependabot.yaml`; a registry it cannot reach is
-  one it silently resolves around.
+  release needs no lockfile ceremony.
+- The screened index is `[[tool.uv.index]]` in `pyproject.toml`, so a plain
+  `uv lock` records it and there is no environment variable to remember. CI still
+  exports `UV_INDEX_URL` through `setup-takumi-guard-pypi`, and Dependabot reaches
+  the index through `registries` in `.github/dependabot.yaml`. All three name one
+  URL, trailing slash included, because that string is what `uv sync --locked`
+  compares.
 
 ## Every release (CI)
 
