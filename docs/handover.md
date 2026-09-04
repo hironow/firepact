@@ -68,7 +68,7 @@ Repository hardening lives in GitHub settings, not in the tree:
   CI e2e job runs it under `firebase emulators:exec`.
 - `fixtures/` holds the canonical contract artifact, and the read-view projection
   is shared by emit and compat in `src/lib.rs`, so the gate cannot drift.
-- Releasing has its own document, `docs/release.md`: the repository rules, the
+- Releasing has its own document, [`docs/release.md`](release.md): the repository rules, the
   tag-driven workflow, and the checks to run first.
 - Third-party actions must be allowlisted under Settings, Actions, General.
   `extractions/setup-just` pulls in `extractions/setup-crate`, so both need an
@@ -77,7 +77,7 @@ Repository hardening lives in GitHub settings, not in the tree:
 ## Relevant Files and Commands
 
 - `.github/workflows/ci.yaml` — what the CodeQL alerts point at.
-- `docs/release.md` — how a version reaches PyPI and crates.io.
+- [`docs/release.md`](release.md) — how a version reaches PyPI and crates.io.
 - `pyproject.toml`, key `[tool.uv] exclude-newer` — the uv resolution cutoff.
 - `src/lib.rs` — emitter, shared projection, PyO3 binding; `src/compat.rs` — gate.
 - `just check` — the no-write gate: rust and python lint, types, markdown, links.
