@@ -25,22 +25,18 @@ Repository hardening lives in GitHub settings, not in the tree:
 
 ## In Progress
 
-- [PR #38](https://github.com/hironow/firepact/pull/38) bumps
-  `actions/setup-java` 5.7.0 to 6.0.0. All 15 checks are green and it is
-  mergeable; it only needs a merge.
 - Eight open code scanning alerts, all produced by the first CodeQL run.
 
 ## Next Actions
 
-1. Merge PR #38.
-2. Clear the eight CodeQL alerts. Each is `actions/missing-workflow-permissions`
+1. Clear the eight CodeQL alerts. Each is `actions/missing-workflow-permissions`
    against `.github/workflows/ci.yaml`, one per job, because that workflow
    declares no `permissions:`. Add a top-level `permissions: contents: read` the
    way `release.yaml` already does, rather than dismissing the alerts.
-3. Unblock the uv ecosystem by advancing `[tool.uv] exclude-newer` in
+2. Unblock the uv ecosystem by advancing `[tool.uv] exclude-newer` in
    `pyproject.toml` past the versions Dependabot is trying to reach, then
    re-locking. The failure and the required index are under Known Risks.
-4. Still open from before: commit released bundles under `schemas/v*.json` and
+3. Still open from before: commit released bundles under `schemas/v*.json` and
    wire `firepact compat --history schemas` into CI, and grow `.semgrep/rules/`
    as patterns recur.
 
@@ -68,6 +64,8 @@ Repository hardening lives in GitHub settings, not in the tree:
 ## Context the Next Actor Needs
 
 - `main` carries no branch ruleset, but changes still go through a pull request.
+- Nine `v*` tags exist and no GitHub Release has been cut against any of them.
+  That is deliberate; the registries are the release surface.
 - E2E is local-only: it needs bun and the Firestore emulator on `127.0.0.1:8080`,
   project `demo-firepact`, `singleProjectMode`, from `~/dotfiles/emulator`. The
   CI e2e job runs it under `firebase emulators:exec`.
