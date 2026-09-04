@@ -165,6 +165,11 @@ git-ignored, so anything recorded only there is not reflected here.
 - `just deps-upgrade` upgrades every locked dependency that has cleared the
   cooldown and verifies the result with `uv sync --locked`. It moves everything at
   once, so run it as its own pull request rather than folding it into a release.
+- Frontend dependencies are frozen everywhere except one task: `just
+  frontend-install` is the only command allowed to rewrite
+  `tests/e2e/frontend/bun.lock`. Change `package.json`, run it, and commit the
+  lockfile in the same change; everything else, `just ci` and CI included,
+  installs with `--frozen-lockfile` and fails on drift.
 - The prek hooks cover part of this already. Pre-commit runs `just fmt` and
   `just lint`; pre-push runs `just check` and `just test`. Install them once per
   clone with `just install-hooks`.

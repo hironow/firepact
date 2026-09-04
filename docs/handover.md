@@ -80,5 +80,6 @@ scan of `main` reports no results.
 - `pyproject.toml`, key `[tool.uv] exclude-newer` — the dependency cooldown.
 - `src/lib.rs` — emitter, shared projection, PyO3 binding; `src/compat.rs` — gate.
 - `just check` — the no-write gate: rust and python lint, types, markdown, links.
-- `just test` / `just test-e2e` / `just build-ext` / `just deps-upgrade`.
+- `just test` / `just test-e2e` / `just build-ext` / `just deps-upgrade` /
+  `just frontend-install` (the only writer of `bun.lock`).
 - `just ci` — local CI parity; `just ci-all` adds the pydantic version matrix.
