@@ -79,6 +79,9 @@ plus console scripts `firepact-gen` (TypeScript + `--bundle-out`),
 `check_compat` APIs (ADR 0003). The pure binary is also installable via
 `cargo install`.
 
+How a version actually reaches those two registries -- the repository rules, the
+tag-driven workflow, and the checks to run first -- is in [release.md](release.md).
+
 ## Not included
 
 A general multi-dialect JSON Schema compiler (ADR 0007) and OpenTelemetry
