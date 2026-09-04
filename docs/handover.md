@@ -1,6 +1,6 @@
 # Handover
 
-**Last updated:** 2026-09-04 20:19 (JST)
+**Last updated:** 2026-09-04 23:00 (JST)
 **Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
 
 ## Current State
@@ -33,10 +33,7 @@ scan of `main` reports no results.
 1. Work through Dependabot's uv pull requests as they arrive. They resolve
    now that the cooldown is relative, so the backlog it could not open should
    appear on its next run.
-2. Decide whether bun should resolve through the Takumi Guard proxy. The
-   research says not yet, and says why:
-   [2026-09-04 note](research/2026-09-04-takumi-guard-npm-proxy-for-bun.md).
-3. Still open from before: commit released bundles under `schemas/v*.json` and
+2. Still open from before: commit released bundles under `schemas/v*.json` and
    wire `firepact compat --history schemas` into CI, and grow `.semgrep/rules/`
    as patterns recur.
 
@@ -59,6 +56,9 @@ scan of `main` reports no results.
   only, linear history, no bypass, and all fifteen `ci.yaml` jobs required by
   name. Renaming one means editing the ruleset too; see
   [`docs/release.md`](release.md).
+- Decided 2026-09-04: bun stays on the public registry. The
+  [research note](research/2026-09-04-takumi-guard-npm-proxy-for-bun.md) records
+  why, and the two conditions for revisiting.
 - `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain. uv
   records the span in `uv.lock` and recomputes it only on a new resolution, so
   `just deps-upgrade` is the only lever.
