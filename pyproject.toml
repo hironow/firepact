@@ -81,6 +81,21 @@ features = ["python"]
 [tool.uv]
 exclude-newer = "7 days"
 
+# The screened index, declared in the project rather than left to whoever happens
+# to set an environment variable. CI still injects
+# UV_INDEX_URL=https://pypi.flatt.tech/simple/ through setup-takumi-guard-pypi, and
+# Dependabot reaches the same index through `registries` in
+# .github/dependabot.yaml. All three name one URL, so they agree instead of one
+# quietly resolving somewhere else.
+#
+# `default = true` replaces PyPI rather than adding a second index, which is what
+# UV_INDEX_URL does. The url must equal what uv.lock records, trailing slash
+# included, because that exact string is what `uv sync --locked` compares.
+[[tool.uv.index]]
+name = "takumi-guard"
+url = "https://pypi.flatt.tech/simple/"
+default = true
+
 [tool.ruff.lint]
 # see: https://docs.astral.sh/ruff/rules/
 select = [
