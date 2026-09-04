@@ -112,7 +112,10 @@ jobs:
       - name: Type-check the consumer against the generated types
         working-directory: tests/e2e/frontend
         run: |
-          bun install
+          # --frozen-lockfile fails if bun.lock drifts from package.json, the bun
+          # counterpart to `uv sync --locked` and `cargo test --locked`. Without it
+          # bun silently re-resolves and the committed lock stops meaning anything.
+          bun install --frozen-lockfile
           bunx tsc --noEmit
 
   compat:
@@ -167,7 +170,8 @@ jobs:
       # no account needed. Must precede any uv/pip install.
       - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
       - run: uv sync
-      - run: bun install
+      # --frozen-lockfile: same lockfile guard as the frontend-typecheck job.
+      - run: bun install --frozen-lockfile
         working-directory: tests/e2e/frontend
       - name: Run the E2E suite under the Firestore emulator
         run: >-
