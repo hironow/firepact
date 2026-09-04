@@ -1,17 +1,18 @@
 # Handover
 
-**Last updated:** 2026-09-04 13:46 (JST)
+**Last updated:** 2026-09-04 20:19 (JST)
 **Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
 
 ## Current State
 
 v0.1.8 is published on PyPI (`firepact`) and crates.io (`firepact-core`) through
-OIDC trusted publishing (ADR 0013), and `main` is green. Every planned phase is
-implemented: the Rust emitter, the Python extractor, the FULL_TRANSITIVE compat
-gate, the CI matrix, and the Phase 2 projections. What the system does is in
-[`docs/README.md`](README.md); why it is shaped that way is in [`adr/`](adr/).
-Work since the last handover has been maintenance only: Dependabot bumps and a
-re-lock of `uv.lock` in the Takumi Guard index form.
+OIDC trusted publishing (ADR 0013), `main` is green, and every planned phase is
+implemented. What the system does is in [`docs/README.md`](README.md); why it is
+shaped that way is in [`adr/`](adr/). Today went into the supply chain and the
+gates: the uv cutoff is a relative seven-day cooldown, the screened index
+moved into `pyproject.toml`, and Dependabot resolves where CI does. Every
+lockfile is guarded, `bun.lock` included; every CI job runs its `just` recipe, so
+the two cannot drift; and `protect` requires all fifteen.
 
 Repository hardening lives in GitHub settings, not in the tree:
 
