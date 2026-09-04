@@ -41,12 +41,15 @@ scan of `main` reports no results.
 ## Known Risks / Blockers
 
 - `uv sync` skips rebuilding the in-tree PyO3 module when Rust changes without a
-  version bump. Run `just build-ext` after touching Rust.
+  version bump. Run `just build-ext` afterwards.
 - The `importlib.import_module` call in `python/firepact/cli.py` trips the managed
   semgrep guardrail. Accepted false positive: a validated dotted path from
   build-time input, and that scanner ignores inline `# nosemgrep`.
 - x86_64 macOS wheels cross-compile on the arm64 runner, the Intel image having
   been retired. Revisit if that matters past 2027.
+- Dependabot's bun updater cannot read bun 1.4's `lockfileVersion 2`, so version
+  updates for `tests/e2e/frontend` may fail. Until they do, `just
+  frontend-audit` is that package's only vulnerability gate.
 
 ## Context the Next Actor Needs
 
@@ -59,18 +62,16 @@ scan of `main` reports no results.
   `just deps-upgrade` is the only lever.
 - The screened index is `[[tool.uv.index]]` in `pyproject.toml`, so `uv lock`
   records it with no environment variable. CI and Dependabot name the same URL.
-- Nine `v*` tags exist with no GitHub Release cut against any. That is
-  deliberate; the registries are the release surface.
+- Nine `v*` tags exist with no GitHub Release against any. That is
+  deliberate: the registries are the release surface.
 - E2E is local-only: it needs bun and the Firestore emulator on `127.0.0.1:8080`,
   project `demo-firepact`, `singleProjectMode`, from `~/dotfiles/emulator`. The
   CI e2e job runs it under `firebase emulators:exec`.
 - `fixtures/` holds the canonical contract artifact, and the read-view projection
   is shared by emit and compat in `src/lib.rs`, so the gate cannot drift.
-- Releasing has its own document, [`docs/release.md`](release.md): the repository rules, the
-  tag-driven workflow, and the checks to run first.
-- Third-party actions must be allowlisted under Settings, Actions, General.
-  `extractions/setup-just` pulls in `extractions/setup-crate`, so both need an
-  entry before CI setup will run.
+- Third-party actions need allowlisting under Settings, Actions, General.
+  `extractions/setup-just` pulls in `extractions/setup-crate`, so both need
+  entries.
 
 ## Relevant Files and Commands
 
