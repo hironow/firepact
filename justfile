@@ -91,6 +91,15 @@ gen-docs: build
 test-e2e: build build-ext
     uv run --group e2e pytest tests/e2e -v
 
+# The ONLY place that may rewrite tests/e2e/frontend/bun.lock. Everywhere else,
+# here and in CI, installs with --frozen-lockfile so the committed lock is a real
+# guard instead of a file that silently re-resolves. Run this after editing
+# tests/e2e/frontend/package.json, then commit the lockfile with that change.
+
+# Install the e2e frontend and update its bun.lock
+frontend-install:
+    cd tests/e2e/frontend && bun install
+
 # --- Compatibility gate (FULL_TRANSITIVE) ---
 
 # Diff the compat example's current bundle against its committed schema history
@@ -136,11 +145,14 @@ semgrep:
 
 # --- CI parity (.github/workflows/ci.yaml) ---
 
+# Mirrors the CI frontend-typecheck job, --frozen-lockfile included, so `just ci`
+# cannot quietly rewrite bun.lock the way a plain install does. If this fails with
+# "lockfile had changes", run `just frontend-install` and commit the lockfile.
+
 # Type-check the frontend consumer against freshly generated types
-# (mirrors the CI frontend-typecheck job)
 frontend-typecheck: build
     ./target/debug/firepact emit fixtures/message.bundle.json > tests/e2e/frontend/generated.ts
-    cd tests/e2e/frontend && bun install && bunx tsc --noEmit
+    cd tests/e2e/frontend && bun install --frozen-lockfile && bunx tsc --noEmit
 
 # Run the E2E suite under a one-shot Firestore emulator -- the exact command
 # the CI e2e job runs (needs firebase-tools and a JVM; fails loud without them)
