@@ -13,6 +13,25 @@
 #   uv              -> pyproject.toml + uv.lock (pydantic drives schema output)
 #   npm             -> tests/e2e/frontend (bun.lock; firebase + typescript)
 version: 2
+
+# Dependabot can only reach a registry that is declared here. Left undeclared, it
+# resolves through pypi.org and rewrites every `source = { registry = ... }` in
+# uv.lock, plus every sdist and wheel URL, to pythonhosted. CI injects
+# UV_INDEX_URL=https://pypi.flatt.tech/simple/ before `uv sync --locked`, so such
+# a lockfile fails there with "The lockfile at `uv.lock` needs to be updated"
+# even though the versions and hashes are correct.
+#
+# The url must equal the value recorded in uv.lock byte for byte, trailing slash
+# included. No credentials: Takumi Guard's blocking-only mode is anonymous, the
+# same reason setup-takumi-guard-pypi is used with no bot-id in ci.yaml.
+registries:
+  takumi-guard-pypi:
+    type: python-index
+    url: https://pypi.flatt.tech/simple/
+    # Replace the default PyPI base rather than adding a second index, which is
+    # what UV_INDEX_URL does for uv in CI.
+    replaces-base: true
+
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -42,6 +61,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Resolve through the screened index, the one CI uses, so the registry and
+    # artifact URLs Dependabot writes into uv.lock survive `uv sync --locked`.
+    registries: "*"
     # Keep this at seven days to match `[tool.uv] exclude-newer = "7 days"` in
     # pyproject.toml, and change the two together. They gate different things: uv's
     # cutoff decides what may enter uv.lock at all, while this one only decides when
