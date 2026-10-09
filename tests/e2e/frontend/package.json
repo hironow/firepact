@@ -4,11 +4,11 @@
   "type": "module",
   "description": "E2E consumer: compiles against firepact-generated types and reads via onSnapshot.",
   "dependencies": {
-    "firebase": "^12.14.0"
+    "firebase": "^12.19.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
-    "@types/node": "^26.0.1"
+    "@types/node": "^26.6.4"
   },
   "overrides": {
     "@grpc/grpc-js": "1.13.6"
