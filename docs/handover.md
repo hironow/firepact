@@ -17,7 +17,8 @@ The emulator CLI is installed through bun in CI.
 
 ## In Progress
 
-Branch `chore/dependency-rollup-20261011` supersedes PRs #71, #72, #73, #75,
+[Rollup PR #77](https://github.com/hironow/firepact/pull/77) on branch
+`chore/dependency-rollup-20261011` supersedes PRs #71, #72, #73, #75,
 and #76. Local `just check`, `just test`, `just lock-check`, frontend audit,
 `just frontend-typecheck`, `just example-compat`, `just semgrep`,
 and the workflow regression checks pass. Final CI and CodeQL status must be
@@ -31,8 +32,10 @@ after that merge.
 
 ## Known Risks / Blockers
 
-- Previous Dependabot heads had a neutral CodeQL result reporting missing
-  analysis configurations. A fresh rollup run must produce successful results.
+- All fifteen CI jobs and all four CodeQL analyses passed on the initial rollup
+  head. The AI security review failed with HTTP 402 due to monthly quota.
+  The maintainer has added quota; this documentation update triggers a fresh
+  review and CI run. GitHub rejects direct retries of that dynamic run.
 - Local Firestore E2E requires Java and firebase-tools, which are absent in this
   checkout's environment. The CI emulator job covers the real E2E path.
 - `uv sync` can skip rebuilding same-version Rust source changes. Use
