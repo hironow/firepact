@@ -5,57 +5,39 @@
 
 ## Current State
 
-v0.1.8 is published on PyPI and crates.io through OIDC trusted publishing
-(ADR 0013). The dependency rollup contains PyO3 0.29.3, mypy 2.4.0 and its
-required runtime dependencies, google-cloud-firestore 2.34.0, Firebase 12.19.0,
-Node types 26.6.4, and setup-takumi-guard-pypi 1.3.0. Ruff 0.16.10 is already
-on main through PR #74.
-
-Every CI job skips draft pull requests and resumes on `ready_for_review`.
-`just check-workflows` enforces this in the local gate and Python CI jobs.
-The emulator CLI is installed through bun in CI.
+The dependency rollup PR #77 is merged. Python packages resolve from the
+public PyPI registry. No CI, project or Dependabot setting selects Takumi Guard.
+The registry migration preserves all 35 package versions and their artifact
+hashes, plus the seven-day cooldown. Existing Rust, Python, generated frontend,
+FULL_TRANSITIVE compatibility, emulator E2E and CodeQL gates remain in place.
+Every CI job skips drafts and resumes on `ready_for_review`.
 
 ## In Progress
 
-[Rollup PR #77](https://github.com/hironow/firepact/pull/77) on branch
-`chore/dependency-rollup-20261011` supersedes PRs #71, #72, #73, #75,
-and #76. Local `just check`, `just test`, `just lock-check`, frontend audit,
-`just frontend-typecheck`, `just example-compat`, `just semgrep`,
-and the workflow regression checks pass. Final CI and CodeQL status must be
-checked on the rollup head before squash merging; close the original PRs only
-after that merge.
+[PR #78](https://github.com/hironow/firepact/pull/78) removes the mirror from
+configuration and lock URLs. Initial CI and CodeQL checks all passed (20 total).
+An isolated Python 3.13 `just lock-check` installed from PyPI successfully;
+`just check-workflows` passed its two regressions. The current maintenance
+commit also aligns the handover and installer comments with the public registry.
 
 ## Next Actions
 
-1. Verify all rollup CI checks, including all four CodeQL language analyses.
-2. Squash merge the validated head and close the five superseded PRs.
-
-## Known Risks / Blockers
-
-- All fifteen CI jobs and all four CodeQL analyses passed on the initial rollup
-  head. The AI security review failed with HTTP 402 due to monthly quota.
-  The maintainer has added quota; this documentation update triggers a fresh
-  review and CI run. GitHub rejects direct retries of that dynamic run.
-- Local Firestore E2E requires Java and firebase-tools, which are absent in this
-  checkout's environment. The CI emulator job covers the real E2E path.
-- `uv sync` can skip rebuilding same-version Rust source changes. Use
-  `just build-ext` when editing the native extension.
+Verify all checks on the final PR head, squash merge, remove the obsolete
+Flatt action allowlist pattern, then verify main CI.
 
 ## Context the Next Actor Needs
 
-- The `protect` ruleset requires PRs, squash merges, linear history, and fifteen
-  CI jobs. Preserve their names; see [`release.md`](release.md).
-- Keep cooldowns, screened PyPI index, frozen bun installs, and locked uv/Cargo
-  installs. Do not blanket-regenerate locks when diagnosing a red update.
-- CodeQL default setup covers actions, Python, JavaScript/TypeScript, and Rust.
-- Release tags require the protected `release` environment; registries are the
-  release surface, not GitHub Releases.
+- Preserve the required CI job names and locked Cargo/uv and frozen Bun gates.
+- The dated Takumi Guard npm research is retained as historical evidence.
+- Local emulator E2E needs Java and firebase-tools; CI checks the real path.
+- Same-version Rust edits need `just build-ext` to rebuild the Python extension.
+- Release tags use the protected release environment and OIDC publishing.
+  No release tag or published package is part of this maintenance work.
 
 ## Relevant Files and Commands
 
 - `.github/workflows/ci.yaml` — required gates and draft policy.
 - `tests/unit/test_workflow_policy.py` — draft/ready regression checks.
-- `just check` / `just test` — local lint, types, format, links, and fast tests.
-- `just frontend-typecheck` / `just example-compat` — generated consumer types
-  and FULL_TRANSITIVE compatibility.
-- `just ci-all` — full CI parity, including real emulator and Pydantic matrix.
+- `just lock-check` / `just check-workflows` — frozen install and workflow policy.
+- `just test` — Rust and Python tests, including native parity.
+- `just ci-all` — CI parity including emulator E2E and the Pydantic matrix.

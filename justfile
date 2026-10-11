@@ -44,8 +44,8 @@ build-ext:
 # until it has been public for a week. The window is relative and needs no
 # maintenance: uv records the span in uv.lock and recomputes it only when a new
 # resolution is asked for, which is what this task does. The index needs no
-# exporting either: [[tool.uv.index]] in pyproject.toml is the default index, so a
-# plain `uv lock` records the screened registry that `uv sync --locked` expects.
+# exporting either: uv uses the official PyPI default index, so a plain
+# `uv lock` records the same registry that `uv sync --locked` expects.
 # Run this on purpose and on its own branch: it moves every dependency at once, so
 # the diff wants reading and the full gate wants running before it merges.
 
@@ -141,7 +141,7 @@ fmt-md:
 
 # Check markdown relative links resolve (files + heading anchors)
 check-links:
-    python3 scripts/check_links.py
+    uv run --locked python scripts/check_links.py
 
 # Run all fast tests
 test: test-rust test-py
