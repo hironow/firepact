@@ -1,87 +1,61 @@
 # Handover
 
-**Last updated:** 2026-09-04 23:00 (JST)
-**Updated by:** Claude Code session 01LXPmm8VuMHBjo4Q6k7tRtq (delegated by hironow)
+**Last updated:** 2026-10-11 (JST)
+**Updated by:** Codex
 
 ## Current State
 
-v0.1.8 is published on PyPI (`firepact`) and crates.io (`firepact-core`) through
-OIDC trusted publishing (ADR 0013), `main` is green, and every planned phase is
-implemented. What the system does is in [`docs/README.md`](README.md); why it is
-shaped that way is in [`adr/`](adr/). Today went into the supply chain and the
-gates: a seven-day cooldown on all three ecosystems, one screened index, every
-lockfile guarded, and every CI job running its `just` recipe so CI and local
-cannot drift.
+v0.1.8 is published on PyPI and crates.io through OIDC trusted publishing
+(ADR 0013). The dependency rollup contains PyO3 0.29.3, mypy 2.4.0 and its
+required runtime dependencies, google-cloud-firestore 2.34.0, Firebase 12.19.0,
+Node types 26.6.4, and setup-takumi-guard-pypi 1.3.0. Ruff 0.16.10 is already
+on main through PR #74.
 
-Repository hardening lives in GitHub settings, not in the tree:
-
-- **CodeQL default setup — enabled 2026-09-04.** Weekly, default query suite,
-  remote threat model, over actions / python / javascript-typescript / rust.
-  The first scan has completed.
-- **Private vulnerability reporting — enabled 2026-09-04.**
-- Already in place: the `release` environment (required reviewer `hironow`, tag
-  branch policy), the active `v*` tag ruleset, Dependabot version and security
-  updates, and secret scanning with push protection.
+Every CI job skips draft pull requests and resumes on `ready_for_review`.
+`just check-workflows` enforces this in the local gate and Python CI jobs.
+The emulator CLI is installed through bun in CI.
 
 ## In Progress
 
-Nothing. The eight alerts the first CodeQL scan raised are fixed, and the latest
-scan of `main` reports no results.
+[Rollup PR #77](https://github.com/hironow/firepact/pull/77) on branch
+`chore/dependency-rollup-20261011` supersedes PRs #71, #72, #73, #75,
+and #76. Local `just check`, `just test`, `just lock-check`, frontend audit,
+`just frontend-typecheck`, `just example-compat`, `just semgrep`,
+and the workflow regression checks pass. Final CI and CodeQL status must be
+checked on the rollup head before squash merging; close the original PRs only
+after that merge.
 
 ## Next Actions
 
-1. Work through Dependabot's uv pull requests as they arrive. They resolve
-   now that the cooldown is relative, so the backlog it could not open should
-   appear on its next run.
-2. Still open from before: commit released bundles under `schemas/v*.json` and
-   wire `firepact compat --history schemas` into CI, and grow `.semgrep/rules/`
-   as patterns recur.
+1. Verify all rollup CI checks, including all four CodeQL language analyses.
+2. Squash merge the validated head and close the five superseded PRs.
 
 ## Known Risks / Blockers
 
-- `uv sync` skips rebuilding the in-tree PyO3 module when Rust changes without a
-  version bump. Run `just build-ext` afterwards.
-- The `importlib.import_module` call in `python/firepact/cli.py` trips the managed
-  semgrep guardrail. Accepted false positive: a validated dotted path from
-  build-time input, and that scanner ignores `# nosemgrep`.
-- x86_64 macOS wheels cross-compile on the arm64 runner, the Intel image having
-  been retired. Revisit if that matters past 2027.
-- Dependabot's bun updater cannot read bun 1.4's `lockfileVersion 2`, so version
-  updates for `tests/e2e/frontend` may fail. Until they do, `just
-  frontend-audit` is its only vulnerability gate.
+- All fifteen CI jobs and all four CodeQL analyses passed on the initial rollup
+  head. The AI security review failed with HTTP 402 due to monthly quota.
+  The maintainer has added quota; this documentation update triggers a fresh
+  review and CI run. GitHub rejects direct retries of that dynamic run.
+- Local Firestore E2E requires Java and firebase-tools, which are absent in this
+  checkout's environment. The CI emulator job covers the real E2E path.
+- `uv sync` can skip rebuilding same-version Rust source changes. Use
+  `just build-ext` when editing the native extension.
 
 ## Context the Next Actor Needs
 
-- `main` is covered by the `protect` ruleset: pull requests only, squash merges
-  only, linear history, no bypass, and all fifteen `ci.yaml` jobs required by
-  name. Renaming one means editing the ruleset too; see
-  [`docs/release.md`](release.md).
-- Decided 2026-09-04: bun stays on the public registry. The
-  [research note](research/2026-09-04-takumi-guard-npm-proxy-for-bun.md) records
-  why, and the two conditions for revisiting.
-- `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain. uv
-  records the span in `uv.lock` and recomputes it only on a new resolution, so
-  `just deps-upgrade` is the only lever.
-- The screened index is `[[tool.uv.index]]` in `pyproject.toml`, so `uv lock`
-  records it with no environment variable. CI and Dependabot name the same URL.
-- Nine `v*` tags exist with no GitHub Release against any. That is
-  deliberate: the registries are the release surface.
-- E2E needs bun and the emulator on `127.0.0.1:8080`, project `demo-firepact`,
-  `singleProjectMode`, from `~/dotfiles/emulator`. CI runs it under
-  `firebase emulators:exec`.
-- `fixtures/` holds the canonical contract artifact, and the read-view projection
-  is shared by emit and compat in `src/lib.rs`, so the gate cannot drift.
-- Third-party actions need allowlisting under Settings, Actions, General.
-  `extractions/setup-just` pulls in `extractions/setup-crate`, so both need
-  entries.
+- The `protect` ruleset requires PRs, squash merges, linear history, and fifteen
+  CI jobs. Preserve their names; see [`release.md`](release.md).
+- Keep cooldowns, screened PyPI index, frozen bun installs, and locked uv/Cargo
+  installs. Do not blanket-regenerate locks when diagnosing a red update.
+- CodeQL default setup covers actions, Python, JavaScript/TypeScript, and Rust.
+- Release tags require the protected `release` environment; registries are the
+  release surface, not GitHub Releases.
 
 ## Relevant Files and Commands
 
-- `.github/workflows/ci.yaml` — the CI gate; declares `permissions: contents: read`.
-- [`docs/release.md`](release.md) — how a version reaches PyPI and crates.io.
-- `pyproject.toml`, key `[tool.uv] exclude-newer` — the dependency cooldown.
-- `src/lib.rs` — emitter, shared projection, PyO3 binding; `src/compat.rs` — gate.
-- `just check` — the no-write gate: rust and python lint, types, markdown, links.
-- `just test` / `just test-e2e` / `just build-ext` / `just deps-upgrade` /
-  `just frontend-install` (the only writer of `bun.lock`).
-- `just ci` — local CI parity; `just ci-all` adds the pydantic version matrix.
+- `.github/workflows/ci.yaml` — required gates and draft policy.
+- `tests/unit/test_workflow_policy.py` — draft/ready regression checks.
+- `just check` / `just test` — local lint, types, format, links, and fast tests.
+- `just frontend-typecheck` / `just example-compat` — generated consumer types
+  and FULL_TRANSITIVE compatibility.
+- `just ci-all` — full CI parity, including real emulator and Pydantic matrix.

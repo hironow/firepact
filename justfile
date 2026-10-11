@@ -150,7 +150,7 @@ test: test-rust test-py
 lint: lint-rust lint-py lint-md check-links
 
 # Strict gate, no writes: everything `lint` runs plus Python format drift
-check: lint-rust check-py lint-md check-links
+check: lint-rust check-py lint-md check-links check-workflows
 
 # Format all sources
 fmt: fmt-rust fmt-py fmt-md
@@ -248,3 +248,7 @@ install-hooks:
 # Run every prek hook against all files (matches what git invokes)
 pre-commit:
     uvx prek run --all-files
+
+# Verify the pull-request draft/ready workflow policy
+check-workflows:
+    uv run --locked pytest tests/unit/test_workflow_policy.py -q
