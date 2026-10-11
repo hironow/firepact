@@ -56,7 +56,7 @@ jobs:
       # Route PyPI installs through Takumi Guard (blocks known-malicious packages
       # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
       # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       # lock-check is `uv sync --locked`, the uv-side counterpart to cargo's
       # --locked. check-py is ruff, mypy and format drift; test-py builds the
       # binary front-end first, so the py<->rust parity test cannot skip itself.
@@ -85,7 +85,7 @@ jobs:
       # Route PyPI installs through Takumi Guard (blocks known-malicious packages
       # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
       # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       - run: uv sync
       # One leg of the canary. The recipe owns the test paths and the env flag that
       # skips the exact schema-layer golden, so this matrix and `just
@@ -129,7 +129,7 @@ jobs:
       # Route PyPI installs through Takumi Guard (blocks known-malicious packages
       # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
       # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       - run: uv sync
       - name: Gate the example contract against schemas/ history
         run: just example-compat
@@ -162,7 +162,7 @@ jobs:
       # Route PyPI installs through Takumi Guard (blocks known-malicious packages
       # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
       # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       - run: uv sync
       # --frozen-lockfile: same lockfile guard as the frontend-typecheck job.
       - run: bun install --frozen-lockfile
@@ -201,7 +201,7 @@ jobs:
       # Route PyPI installs through Takumi Guard (blocks known-malicious packages
       # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
       # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@bac24f8a97255d96a277f60de6906154ce0be096 # v1.1.0
+      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       # Pinned, installed with uv rather than pipx (uv is the Python tool this repo
       # uses), and resolved through the screened index like every other install
       # here. An unpinned scanner turns an upstream rule change into a red build on
