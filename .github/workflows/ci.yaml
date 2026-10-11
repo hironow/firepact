@@ -8,9 +8,7 @@ on:
 
 # Least privilege, workflow-wide: every job here only reads the repository.
 # Nothing comments on a pull request, uploads SARIF, attests an artifact, or
-# writes through gh, so no job elevates. setup-takumi-guard-pypi is used with no
-# bot-id, which is its anonymous mode: it sets UV_INDEX_URL from its first step
-# and never requests an OIDC token, so id-token: write is not needed either.
+# writes through gh, so no job elevates.
 permissions:
   contents: read
 
@@ -56,10 +54,6 @@ jobs:
           version: "0.11.16"
           python-version: ${{ matrix.python-version }}
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
-      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
-      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
-      # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       # lock-check is `uv sync --locked`, the uv-side counterpart to cargo's
       # --locked. check-py is ruff, mypy and format drift; test-py builds the
       # binary front-end first, so the py<->rust parity test cannot skip itself.
@@ -87,10 +81,6 @@ jobs:
           version: "0.11.16"
           python-version: "3.12"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
-      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
-      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
-      # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       - run: uv sync
       # One leg of the canary. The recipe owns the test paths and the env flag that
       # skips the exact schema-layer golden, so this matrix and `just
@@ -133,10 +123,6 @@ jobs:
           version: "0.11.16"
           python-version: "3.13"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
-      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
-      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
-      # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       - run: uv sync
       - name: Gate the example contract against schemas/ history
         run: just example-compat
@@ -167,10 +153,6 @@ jobs:
           java-version: "21"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
       - run: bun add --global firebase-tools
-      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
-      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
-      # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       - run: uv sync
       # --frozen-lockfile: same lockfile guard as the frontend-typecheck job.
       - run: bun install --frozen-lockfile
@@ -193,8 +175,12 @@ jobs:
           bun-version: canary
           no-cache: true
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.11.16"
+          python-version: "3.13"
       - run: just lint-md
-      # Relative-link integrity (files + heading anchors); python3 is preinstalled.
+      # Relative-link integrity runs the stdlib-only script through uv.
       - run: just check-links
 
   semgrep:
@@ -208,16 +194,11 @@ jobs:
           version: "0.11.16"
           python-version: "3.13"
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
-      # Route PyPI installs through Takumi Guard (blocks known-malicious packages
-      # before they execute; sets UV_INDEX_URL for this job). Blocking-only mode,
-      # no account needed. Must precede any uv/pip install.
-      - uses: flatt-security/setup-takumi-guard-pypi@a01b3b2a6436d3df60d4e29c805ad83a704aadc5 # v1.3.0
       # Pinned, installed with uv rather than pipx (uv is the Python tool this repo
-      # uses), and resolved through the screened index like every other install
+      # uses), and resolved through official PyPI like every other install
       # here. An unpinned scanner turns an upstream rule change into a red build on
       # a commit that did not touch anything. Bump it by hand, and only to a
-      # version that has cleared the seven-day window and is on the proxy: 1.176.0
-      # was published 2026-09-01 and the proxy does not carry it.
+      # version that has cleared the seven-day window.
       - name: Install semgrep
         run: uv tool install semgrep==1.175.0
       # Registry language packs (p/python, p/rust, p/typescript) + any local rules;
