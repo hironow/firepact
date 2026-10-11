@@ -89,12 +89,9 @@ artifacts contain is in [architecture.md](architecture.md).
 - `[tool.uv] exclude-newer` is a seven-day cooldown, not a date to maintain: uv
   records the span in `uv.lock` and recomputes it only on a new resolution, so a
   release needs no lockfile ceremony.
-- The screened index is `[[tool.uv.index]]` in `pyproject.toml`, so a plain
-  `uv lock` records it and there is no environment variable to remember. CI still
-  exports `UV_INDEX_URL` through `setup-takumi-guard-pypi`, and Dependabot reaches
-  the index through `registries` in `.github/dependabot.yaml`. All three name one
-  URL, trailing slash included, because that string is what `uv sync --locked`
-  compares.
+- Python packages resolve from pypi.org, uv's default index. No project, CI, or
+  Dependabot setting names another index, so `uv.lock` records pypi.org URLs and
+  `uv sync --locked` resolves the same way everywhere.
 
 ## Every release (CI)
 
@@ -180,11 +177,8 @@ git-ignored, so anything recorded only there is not reflected here.
   and Dependabot's cooldown. The lock therefore records public registry URLs
   only, and resolves identically on any machine whatever a developer's `~/.npmrc`
   says.
-- **Undecided:** whether bun should resolve through the Takumi Guard proxy the
-  way PyPI installs do. Two things have to be answered first: whether
-  `bun audit` works against that proxy at all, and whether CI can reach it
-  without credentials. Until then the frontend resolves from the public registry
-  and `just frontend-audit` is its only screening.
+- The frontend resolves from the public registry, and `just frontend-audit` is
+  its screening, the same as for Python packages.
 - The prek hooks cover part of this already. Pre-commit runs `just fmt` and
   `just lint`; pre-push runs `just check` and `just test`. Install them once per
   clone with `just install-hooks`.
