@@ -141,7 +141,7 @@ fmt-md:
 
 # Check markdown relative links resolve (files + heading anchors)
 check-links:
-    uv run --locked python scripts/check_links.py
+    uv run --no-project python scripts/check_links.py
 
 # Run all fast tests
 test: test-rust test-py

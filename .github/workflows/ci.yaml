@@ -175,8 +175,12 @@ jobs:
           bun-version: canary
           no-cache: true
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.11.16"
+          python-version: "3.13"
       - run: just lint-md
-      # Relative-link integrity (files + heading anchors); python3 is preinstalled.
+      # Relative-link integrity runs the stdlib-only script through uv.
       - run: just check-links
 
   semgrep:
@@ -194,8 +198,7 @@ jobs:
       # uses), and resolved through official PyPI like every other install
       # here. An unpinned scanner turns an upstream rule change into a red build on
       # a commit that did not touch anything. Bump it by hand, and only to a
-      # version that has cleared the seven-day window and is on the proxy: 1.176.0
-      # was published 2026-09-01 and the proxy does not carry it.
+      # version that has cleared the seven-day window.
       - name: Install semgrep
         run: uv tool install semgrep==1.175.0
       # Registry language packs (p/python, p/rust, p/typescript) + any local rules;
