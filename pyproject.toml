@@ -75,11 +75,12 @@ features = ["python"]
 # `uv lock --upgrade-package` naming a release newer than the pinned day failed to
 # resolve until a human moved the date by hand.
 #
-# To take a release still inside the window, a security fix say, exempt that one
-# package rather than moving the window:
-#   exclude-newer-package = { certifi = false }
+# Security exception for certifi 2026.10.19 (uploaded 2026-10-20): keep the
+# seven-day cooldown for every other package. Remove this dated exception
+# after 2026-10-27T02:25:00Z, then regenerate and check uv.lock.
 [tool.uv]
 exclude-newer = "7 days"
+exclude-newer-package = { certifi = "2026-10-21T00:00:00Z" }
 
 # Packages resolve from pypi.org, uv's default index; no project or CI setting
 # points uv anywhere else, so uv.lock records pypi.org URLs everywhere.
