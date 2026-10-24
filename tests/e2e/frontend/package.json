@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "typescript": "^7.0.2",
-    "@types/node": "^26.6.4"
+    "@types/node": "^26.6.5"
   },
   "overrides": {
     "@grpc/grpc-js": "1.13.6"
