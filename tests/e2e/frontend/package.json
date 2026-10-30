@@ -4,7 +4,7 @@
   "type": "module",
   "description": "E2E consumer: compiles against firepact-generated types and reads via onSnapshot.",
   "dependencies": {
-    "firebase": "^13.0.0"
+    "firebase": "^13.1.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
